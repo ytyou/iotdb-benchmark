@@ -163,7 +163,10 @@ public class ConfigDescriptor {
 				else {
 					config.FIRST_DEVICE_INDEX = 0;
 				}
-
+				config.SS_P = Integer.parseInt(properties.getProperty("SS_P", config.SS_P+""));
+				config.SS_Q = Integer.parseInt(properties.getProperty("SS_Q", config.SS_Q+""));
+				config.SS_R = Integer.parseInt(properties.getProperty("SS_R", config.SS_R+""));
+				config.SS_S = Integer.parseInt(properties.getProperty("SS_S", config.SS_S+""));
         config.REAL_INSERT_RATE = Double.parseDouble(properties.getProperty("REAL_INSERT_RATE", config.REAL_INSERT_RATE+""));
 				if(config.REAL_INSERT_RATE <= 0 || config.REAL_INSERT_RATE > 1) {
           config.REAL_INSERT_RATE = 1;

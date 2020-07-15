@@ -241,6 +241,11 @@ public class Config {
 	public int BATCH_EXECUTE_COUNT = 5000;
 	//mataData文件路径
 	public String METADATA_FILE_PATH = "";
+	//SummaryStore 的相应窗口参数
+	public int SS_P = 1;
+	public int SS_Q = 1;
+	public int SS_R = 1;
+	public int SS_S = 1;
 
 	public void initInnerFunction() {
 		FunctionXml xml = null;
