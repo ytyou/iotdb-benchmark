@@ -12,6 +12,7 @@ import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Record;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.*;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DeviceSchema;
+import it.unimi.dsi.fastutil.ints.Int2IntSortedMaps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,7 @@ public class SummaryStoreDB implements IDatabase {
     private String storeLoc = "./tdstore";
     private long streamNum = 0;
     private Map<String, Long> groupIDMap = new HashMap<>();
+    private CountBasedWBMH wbmh;
 
     /**
      * constructor.
@@ -37,8 +39,12 @@ public class SummaryStoreDB implements IDatabase {
     @Override
     public void init() throws TsdbException {
         try {
+            //System.out.println("1");
             store = new SummaryStore(storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
+            //System.out.println("2");
             windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
+            wbmh = new CountBasedWBMH(windowing).setBufferSize(10000);
+            //System.out.println("groupIDMAP= " + groupIDMap);
         } catch (Exception e) {
             throw new TsdbException(
                     "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
@@ -48,30 +54,18 @@ public class SummaryStoreDB implements IDatabase {
     // no need for summaryStoreDB
     @Override
     public void cleanup() throws TsdbException {
-
+        /*
+        try {
+            System.out.println("Delete");
+            Runtime.getRuntime().exec(new String[]{"sh", "-c", "rm -rf " + storeLoc}).waitFor();
+        } catch (Exception e) {
+            throw new TsdbException(
+                    "Cleanup SummaryStoreDB client failed, the Message is " + e.getMessage());
+        }*/
     }
 
     @Override
     public void registerSchema(List<DeviceSchema> schemaList) throws TsdbException {
-        try {
-            for(DeviceSchema schema:schemaList) {
-                String groupName = schema.getGroup();
-                if (!groupIDMap.containsKey(groupName)) {
-                    groupIDMap.put(groupName, streamNum);
-                    CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(10000);
-                    store.registerStream(streamNum, wbmh,
-                            new SimpleCountOperator(),
-                            new MaxOperator(),
-                            new MinOperator(),
-                            new SumOperator());
-                }
-            }
-        } catch (Exception e) {
-            throw new TsdbException(
-                    "register SummaryStoreDB client " + streamNum + " failed, the Message is " + e.getMessage());
-        } finally {
-            streamNum += 1;
-        }
     }
 
     @Override
@@ -79,10 +73,30 @@ public class SummaryStoreDB implements IDatabase {
         // create dataModel
         try {
             DeviceSchema schema = batch.getDeviceSchema();
-            long streamID = groupIDMap.get(schema.getGroup());
-            List<Record> records = batch.getRecords();
-            for (Record record: records) {
-                store.append(streamID, record.getTimestamp(), record.getRecordDataValue());
+            String groupName = schema.getGroup();
+            if (!groupIDMap.containsKey(groupName)){
+                groupIDMap.put(groupName, streamNum);
+                store.registerStream(streamNum, wbmh,
+                        new SimpleCountOperator(),
+                        new MaxOperator(),
+                        new MinOperator(),
+                        new SumOperator());
+                List<Record> records = batch.getRecords();
+                for (Record record : records) {
+                    //System.out.println("recordValue=" + record.getRecordDataValue());
+                    Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
+                    store.append(streamNum, record.getTimestamp(), dataValue);
+                }
+                streamNum += 1;
+            } else {
+                long streamID = groupIDMap.get(schema.getGroup());
+                List<Record> records = batch.getRecords();
+                for (Record record : records) {
+                    //System.out.println("record=" + record);
+                    //System.out.println("recordValue=" + record.getRecordDataValue());
+                    Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
+                    store.append(streamID, record.getTimestamp(), dataValue);
+                }
             }
             return new Status(true);
         } catch (Exception e) {
@@ -145,8 +159,16 @@ public class SummaryStoreDB implements IDatabase {
     }
 
     @Override
-    public void close() {
-
+    public void close() throws TsdbException {
+        try {
+            for (Long value : groupIDMap.values()) {
+                store.unloadStream(value);
+            }
+            store.close();
+        } catch (Exception e){
+            throw new TsdbException(
+                    "Close SummaryStoreDB client failed, the Message is " + e.getMessage());
+        }
     }
 
     private Status executeQueryAndGetStatus(String sql, boolean isLatestPoint) {
@@ -161,4 +183,16 @@ public class SummaryStoreDB implements IDatabase {
         return null;
     }
 
+    private Object castValue(String value, String dataType) {
+        if(dataType.equals("LONG")){
+            //System.out.println(Double.valueOf(value).longValue());
+            return Double.valueOf(value).longValue();
+        } else if (dataType.equals("FLOAT")) {
+            return Float.valueOf(value);
+        } else if (dataType.equals("DOUBLE")) {
+            return Double.valueOf(value);
+        } else { //The value is String
+            return value;
+        }
+    }
 }
