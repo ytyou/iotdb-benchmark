@@ -246,6 +246,9 @@ public class Config {
 	public int SS_Q = 1;
 	public int SS_R = 1;
 	public int SS_S = 1;
+	public int WINDOW_SIZE = 62;
+	public boolean IS_POISSON_DATA = false;
+	public int P_RANDOM = 123;
 
 	public void initInnerFunction() {
 		FunctionXml xml = null;

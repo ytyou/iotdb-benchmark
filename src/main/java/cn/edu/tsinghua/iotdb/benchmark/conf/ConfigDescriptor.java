@@ -167,6 +167,10 @@ public class ConfigDescriptor {
 				config.SS_Q = Integer.parseInt(properties.getProperty("SS_Q", config.SS_Q+""));
 				config.SS_R = Integer.parseInt(properties.getProperty("SS_R", config.SS_R+""));
 				config.SS_S = Integer.parseInt(properties.getProperty("SS_S", config.SS_S+""));
+				config.WINDOW_SIZE = Integer.parseInt(properties.getProperty("WINDOW_SIZE", config.WINDOW_SIZE+""));
+				config.IS_POISSON_DATA = Boolean.parseBoolean(properties.getProperty("IS_POISSON_DATA", config.IS_POISSON_DATA+""));
+				config.P_RANDOM = Integer.parseInt(properties.getProperty("P_RANDOM", config.P_RANDOM+""));
+
         config.REAL_INSERT_RATE = Double.parseDouble(properties.getProperty("REAL_INSERT_RATE", config.REAL_INSERT_RATE+""));
 				if(config.REAL_INSERT_RATE <= 0 || config.REAL_INSERT_RATE > 1) {
           config.REAL_INSERT_RATE = 1;

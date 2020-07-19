@@ -77,7 +77,7 @@ public class SummaryStoreDB implements IDatabase {
             if (!groupIDMap.containsKey(groupName)){
                 groupIDMap.put(groupName, streamNum);
                 Windowing windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
-                CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(10000000);
+                CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(config.WINDOW_SIZE);
                 store.registerStream(streamNum, wbmh,
                         new SimpleCountOperator(),
                         new MaxOperator(),
