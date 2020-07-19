@@ -23,11 +23,11 @@ public class SummaryStoreDB implements IDatabase {
     private static final Logger LOGGER = LoggerFactory.getLogger(cn.edu.tsinghua.iotdb.benchmark.tsdb.opentsdb.OpenTSDB.class);
     private static Config config = ConfigDescriptor.getInstance().getConfig();
     private SummaryStore store;
-    private Windowing windowing;
+    //private Windowing windowing;
     private String storeLoc = "./tdstore";
     private long streamNum = 0;
     private Map<String, Long> groupIDMap = new HashMap<>();
-    private CountBasedWBMH wbmh;
+    //private CountBasedWBMH wbmh;
 
     /**
      * constructor.
@@ -42,8 +42,8 @@ public class SummaryStoreDB implements IDatabase {
             //System.out.println("1");
             store = new SummaryStore(storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
             //System.out.println("2");
-            windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
-            wbmh = new CountBasedWBMH(windowing).setBufferSize(10000);
+            //windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
+            //wbmh = new CountBasedWBMH(windowing).setBufferSize(100000000);
             //System.out.println("groupIDMAP= " + groupIDMap);
         } catch (Exception e) {
             throw new TsdbException(
@@ -73,9 +73,11 @@ public class SummaryStoreDB implements IDatabase {
         // create dataModel
         try {
             DeviceSchema schema = batch.getDeviceSchema();
-            String groupName = schema.getGroup();
+            String groupName = schema.getDevice();
             if (!groupIDMap.containsKey(groupName)){
                 groupIDMap.put(groupName, streamNum);
+                Windowing windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
+                CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(10000000);
                 store.registerStream(streamNum, wbmh,
                         new SimpleCountOperator(),
                         new MaxOperator(),
@@ -83,19 +85,21 @@ public class SummaryStoreDB implements IDatabase {
                         new SumOperator());
                 List<Record> records = batch.getRecords();
                 for (Record record : records) {
-                    //System.out.println("recordValue=" + record.getRecordDataValue());
+                    //System.out.println("StreamNum=" + streamNum+ " groupName="+groupName);
                     Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
                     store.append(streamNum, record.getTimestamp(), dataValue);
                 }
                 streamNum += 1;
             } else {
-                long streamID = groupIDMap.get(schema.getGroup());
+                long streamID = groupIDMap.get(schema.getDevice());
                 List<Record> records = batch.getRecords();
                 for (Record record : records) {
+		    //System.out.println("StreamNum=" + streamID+ " groupName="+groupName);
                     //System.out.println("record=" + record);
                     //System.out.println("recordValue=" + record.getRecordDataValue());
                     Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
-                    store.append(streamID, record.getTimestamp(), dataValue);
+                    //System.out.println("datavalue=" + dataValue+" ts"+record.getTimestamp());
+		    store.append(streamID, record.getTimestamp(), dataValue);
                 }
             }
             return new Status(true);
@@ -162,6 +166,7 @@ public class SummaryStoreDB implements IDatabase {
     public void close() throws TsdbException {
         try {
             for (Long value : groupIDMap.values()) {
+                store.flush(value);
                 store.unloadStream(value);
             }
             store.close();

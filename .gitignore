@@ -26,3 +26,5 @@
 ./conf/*.properties
 **/routine
 /target/
+./dataStore/
+./experimentShells/
