@@ -77,7 +77,7 @@ public class SyntheticWorkload implements IWorkload {
               value = String.format(DECIMAL_FORMAT,
                       Function.getValueByFuntionidAndParam(param, currentTimestamp).floatValue());
             } else {
-              value = String.format(DECIMAL_FORMAT, poisson.Poisson());
+              value = String.valueOf(poisson.Poisson());
             }
           } else {
             StringBuilder builder = new StringBuilder();
