@@ -6,6 +6,7 @@ import cn.edu.tsinghua.iotdb.benchmark.workload.WorkloadException;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DeviceSchema;
+import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -49,6 +50,7 @@ public abstract class BaseClient extends Client implements Runnable {
       LOGGER.info("{} {}% syntheticWorkload is done.", currentThread, percent);
     }, 1, config.LOG_PRINT_INTERVAL, TimeUnit.SECONDS);
     long start = 0;
+    long batchTotal = 0;
     for (loopIndex = 0; loopIndex < config.LOOP; loopIndex++) {
       Operation operation = operationController.getNextOperationType();
       if (config.OP_INTERVAL > 0) {
@@ -62,7 +64,8 @@ public abstract class BaseClient extends Client implements Runnable {
               for (DeviceSchema deviceSchema : schema) {
                 if (deviceSchema.getDeviceId() < actualDeviceFloor) {
                   Batch batch = syntheticWorkload.getOneBatch(deviceSchema, insertLoopIndex);
-                  dbWrapper.insertOneBatch(batch);
+                  Status status = dbWrapper.insertOneBatch(batch);
+                  batchTotal += status.getTimeCost();
                 }
               }
             } catch (Exception e) {
@@ -151,6 +154,7 @@ public abstract class BaseClient extends Client implements Runnable {
       }
 
     }
+    LOGGER.info("The total insert time is {} second", (batchTotal / 1000000000.0d));
     service.shutdown();
   }
 
