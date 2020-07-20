@@ -10,16 +10,16 @@ public class NonUniformDistributionV2 {
     private static Random random;
     private double lambda;
 
-    public NonUniformDistributionV2() {
+    public NonUniformDistributionV2(long random) {
         this.config = ConfigDescriptor.getInstance().getConfig();
-        this.random = new Random(config.P_RANDOM);
+        this.random = new Random(random);
         this.lambda = config.LAMBDA;
     }
 
     //泊松分布    4/100时间单位    大约25一个请求
     public long Poisson(){
-        long x = 0;
-        double b = 1, c = Math.exp(-(this.lambda)), u;
+        long x = 1;
+        double b = 1, c = Math.exp(-(this.lambda - 1)), u;
         do {
             u = random.nextDouble();
             b *= u;

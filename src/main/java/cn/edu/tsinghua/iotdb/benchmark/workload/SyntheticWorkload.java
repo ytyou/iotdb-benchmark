@@ -37,6 +37,8 @@ public class SyntheticWorkload implements IWorkload {
   private Random poissonRandom;
   private Random queryDeviceRandom;
   private Map<Operation, Long> operationLoops;
+  private NonUniformDistributionV2[] poissonList;
+  private long [] poissonValue;
   private static Random random = new Random();
   private static final String DECIMAL_FORMAT = "%." + config.NUMBER_OF_DECIMAL_DIGIT + "f";
   private static Random dataRandom = new Random(config.DATA_SEED);
@@ -55,6 +57,14 @@ public class SyntheticWorkload implements IWorkload {
     operationLoops = new EnumMap<>(Operation.class);
     for (Operation operation : Operation.values()) {
       operationLoops.put(operation, 0L);
+    }
+    if (config.IS_POISSON_DATA){
+      poissonList = new NonUniformDistributionV2[config.DEVICE_NUMBER];
+      poissonValue = new long[config.DEVICE_NUMBER];
+      for (int i = 0; i < config.DEVICE_NUMBER; i++) {
+        poissonList[i] = new NonUniformDistributionV2(config.P_RANDOM + i);
+        poissonValue[i] = 0;
+      }
     }
   }
 
@@ -155,9 +165,36 @@ public class SyntheticWorkload implements IWorkload {
     batch.add(currentTimestamp, values);
   }
 
+  private Batch getPoissonBatch(DeviceSchema deviceSchema, long loopIndex) {
+    Batch batch = new Batch();
+    long deviceID = deviceSchema.getDeviceId();
+    long currentTimestamp = poissonValue[(int)deviceID];
+    for (long batchOffset = 0; batchOffset < config.BATCH_SIZE; batchOffset++) {
+      long stepOffset = loopIndex * config.BATCH_SIZE + batchOffset;
+      List<String> values = new ArrayList<>();
+      if (currentTimestamp == 0){
+        currentTimestamp = Constants.START_TIMESTAMP;
+      } else {
+        currentTimestamp = currentTimestamp + poissonList[(int)deviceID].Poisson();
+      }
+      for(int i = 0; i < config.SENSOR_NUMBER;i++) {
+        values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.WORKLOAD_BUFFER_SIZE)]);
+      }
+      batch.add(currentTimestamp, values);
+      //System.out.println(currentTimestamp + " DEVICEID= "+deviceID);
+    }
+    poissonValue[(int)deviceID] = currentTimestamp;
+    batch.setDeviceSchema(deviceSchema);
+    return batch;
+  }
+
   public Batch getOneBatch(DeviceSchema deviceSchema, long loopIndex) throws WorkloadException {
     if (!config.IS_OVERFLOW) {
-      return getOrderedBatch(deviceSchema, loopIndex);
+      if (!config.IS_POISSON_DATA) {
+        return getOrderedBatch(deviceSchema, loopIndex);
+      } else {
+        return getPoissonBatch(deviceSchema, loopIndex);
+      }
     } else {
       switch (config.OVERFLOW_MODE) {
         case 0:
@@ -265,6 +302,5 @@ public class SyntheticWorkload implements IWorkload {
     return new LatestPointQuery(queryDevices, startTimestamp, endTimestamp,
         config.QUERY_AGGREGATE_FUN);
   }
-
 
 }
