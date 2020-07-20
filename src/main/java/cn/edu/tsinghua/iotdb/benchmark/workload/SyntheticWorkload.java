@@ -62,23 +62,15 @@ public class SyntheticWorkload implements IWorkload {
     String[][] workloadValues = null;
     if(!config.OPERATION_PROPORTION.split(":")[0].equals("0")) {
       workloadValues = new String[config.SENSOR_NUMBER][config.WORKLOAD_BUFFER_SIZE];
-      NonUniformDistributionV2 poisson = null;
-      if(config.IS_POISSON_DATA == true) {
-        poisson = new NonUniformDistributionV2();
-      }
       for (int j = 0; j < config.SENSOR_NUMBER; j++) {
         String sensor = config.SENSOR_CODES.get(j);
         for (int i = 0; i < config.WORKLOAD_BUFFER_SIZE; i++) {
           long currentTimestamp = getCurrentTimestamp(i);
           String value;
           if (!config.DATA_TYPE.equals("TEXT")) {
-            if(config.IS_POISSON_DATA == false) {
-              FunctionParam param = config.SENSOR_FUNCTION.get(sensor);
-              value = String.format(DECIMAL_FORMAT,
-                      Function.getValueByFuntionidAndParam(param, currentTimestamp).floatValue());
-            } else {
-              value = String.valueOf(poisson.Poisson());
-            }
+            FunctionParam param = config.SENSOR_FUNCTION.get(sensor);
+            value = String.format(DECIMAL_FORMAT,
+                    Function.getValueByFuntionidAndParam(param, currentTimestamp).floatValue());
           } else {
             StringBuilder builder = new StringBuilder();
             for (int k = 0; k < config.NUMBER_OF_DECIMAL_DIGIT; k++) {
