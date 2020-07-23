@@ -80,9 +80,11 @@ public class SummaryStoreDB implements IDatabase {
                 CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(config.WINDOW_SIZE);
                 store.registerStream(streamNum, wbmh,
                         new SimpleCountOperator(),
+                        new CMSOperator(20, 1000, 0),
+                        new BloomFilterOperator(5, 1000),
+                        new SumOperator(),
                         new MaxOperator(),
-                        new MinOperator(),
-                        new SumOperator());
+                        new MinOperator());
                 List<Record> records = batch.getRecords();
                 for (Record record : records) {
                     //System.out.println("StreamNum=" + streamNum+ " groupName="+groupName);
@@ -99,7 +101,7 @@ public class SummaryStoreDB implements IDatabase {
                     //System.out.println("recordValue=" + record.getRecordDataValue());
                     Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
                     //System.out.println("datavalue=" + dataValue+" ts"+record.getTimestamp());
-		    store.append(streamID, record.getTimestamp(), dataValue);
+		            store.append(streamID, record.getTimestamp(), dataValue);
                 }
             }
             return new Status(true);

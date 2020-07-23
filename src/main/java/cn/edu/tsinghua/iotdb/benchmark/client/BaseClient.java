@@ -154,7 +154,7 @@ public abstract class BaseClient extends Client implements Runnable {
       }
 
     }
-    LOGGER.info("The total insert time is {} second", (batchTotal / 1000000000.0d));
+    LOGGER.info("In the thread {}, The total insert time is {} seconds", currentThread, (batchTotal / 1000000000.0d));
     service.shutdown();
   }
 
