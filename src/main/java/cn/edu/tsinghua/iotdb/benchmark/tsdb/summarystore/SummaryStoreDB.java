@@ -12,7 +12,6 @@ import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Record;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.*;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DeviceSchema;
-import it.unimi.dsi.fastutil.ints.Int2IntSortedMaps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +22,7 @@ public class SummaryStoreDB implements IDatabase {
     private static final Logger LOGGER = LoggerFactory.getLogger(cn.edu.tsinghua.iotdb.benchmark.tsdb.opentsdb.OpenTSDB.class);
     private static Config config = ConfigDescriptor.getInstance().getConfig();
     private static final String storeLoc = "./tdstore";
-    private long streamNum = 0;
-    private Map<String, Long> groupIDMap = new HashMap<>();
-
+    private Set<Long> groupIDMap = new HashSet<>();
     private static SummaryStore store = null;
 
     public static synchronized SummaryStore getStore() throws TsdbException{
@@ -79,12 +76,12 @@ public class SummaryStoreDB implements IDatabase {
         // create dataModel
         try {
             DeviceSchema schema = batch.getDeviceSchema();
-            String groupName = schema.getDevice();
-            if (!groupIDMap.containsKey(groupName)){
-                groupIDMap.put(groupName, streamNum);
+            long groupID = schema.getDeviceId();
+            if (!groupIDMap.contains(groupID)){
+                groupIDMap.add(groupID);
                 Windowing windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
                 CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(config.WINDOW_SIZE);
-                store.registerStream(streamNum, wbmh,
+                store.registerStream(groupID, wbmh,
                         new SimpleCountOperator(),
                         new CMSOperator(20, 1000, 0),
                         new BloomFilterOperator(5, 1000),
@@ -95,11 +92,9 @@ public class SummaryStoreDB implements IDatabase {
                 for (Record record : records) {
                     //System.out.println("StreamNum=" + streamNum+ " groupName="+groupName);
                     Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
-                    store.append(streamNum, record.getTimestamp(), dataValue);
+                    store.append(groupID, record.getTimestamp(), dataValue);
                 }
-                streamNum += 1;
             } else {
-                long streamID = groupIDMap.get(schema.getDevice());
                 List<Record> records = batch.getRecords();
                 for (Record record : records) {
 		    //System.out.println("StreamNum=" + streamID+ " groupName="+groupName);
@@ -107,7 +102,7 @@ public class SummaryStoreDB implements IDatabase {
                     //System.out.println("recordValue=" + record.getRecordDataValue());
                     Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
                     //System.out.println("datavalue=" + dataValue+" ts"+record.getTimestamp());
-		            store.append(streamID, record.getTimestamp(), dataValue);
+		            store.append(groupID, record.getTimestamp(), dataValue);
                 }
             }
             return new Status(true);
@@ -173,7 +168,7 @@ public class SummaryStoreDB implements IDatabase {
     @Override
     public void close() throws TsdbException {
         try {
-            for (Long value : groupIDMap.values()) {
+            for (Long value : groupIDMap) {
                 store.flush(value);
                 store.unloadStream(value);
             }
