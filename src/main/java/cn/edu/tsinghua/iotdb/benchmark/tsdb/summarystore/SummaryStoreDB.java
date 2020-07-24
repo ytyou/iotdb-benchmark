@@ -22,12 +22,23 @@ public class SummaryStoreDB implements IDatabase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(cn.edu.tsinghua.iotdb.benchmark.tsdb.opentsdb.OpenTSDB.class);
     private static Config config = ConfigDescriptor.getInstance().getConfig();
-    private SummaryStore store;
-    //private Windowing windowing;
-    private String storeLoc = "./tdstore";
+    private static final String storeLoc = "./tdstore";
     private long streamNum = 0;
     private Map<String, Long> groupIDMap = new HashMap<>();
-    //private CountBasedWBMH wbmh;
+
+    private static SummaryStore store = null;
+
+    public static synchronized SummaryStore getStore() throws TsdbException{
+        if(store == null){
+            try {
+                store = new SummaryStore(storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
+            } catch (Exception e) {
+                throw new TsdbException(
+                        "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
+            }
+        }
+        return store;
+    }
 
     /**
      * constructor.
@@ -39,12 +50,7 @@ public class SummaryStoreDB implements IDatabase {
     @Override
     public void init() throws TsdbException {
         try {
-            //System.out.println("1");
-            store = new SummaryStore(storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
-            //System.out.println("2");
-            //windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
-            //wbmh = new CountBasedWBMH(windowing).setBufferSize(100000000);
-            //System.out.println("groupIDMAP= " + groupIDMap);
+            store = getStore();
         } catch (Exception e) {
             throw new TsdbException(
                     "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
