@@ -32,8 +32,7 @@ public class DBWrapper implements IDatabase {
   private static final String ERROR_LOG = "Failed to do {} because unexpected exception: ";
   private ITestDataPersistence recorder;
 
-  public DBWrapper(Measurement measurement) {
-    DBFactory dbFactory = new DBFactory();
+  public DBWrapper(Measurement measurement, DBFactory dbFactory) {
     try {
       db = dbFactory.getDatabase();
     } catch (Exception e) {

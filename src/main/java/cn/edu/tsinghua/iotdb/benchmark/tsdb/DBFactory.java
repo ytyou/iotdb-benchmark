@@ -11,7 +11,9 @@ import cn.edu.tsinghua.iotdb.benchmark.tsdb.kairosdb.KairosDB;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.timescaledb.TimescaleDB;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.opentsdb.OpenTSDB;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.summarystore.SummaryStoreDB;
+import com.samsung.sra.datastore.SummaryStore;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +43,35 @@ public class DBFactory {
       case Constants.DB_OPENTS:
         return new OpenTSDB();
       case Constants.DB_SUMMARYSTORE:
-        return new SummaryStoreDB();
+        return new SummaryStoreDB(getSummaryStoreDB());
       default:
         LOGGER.error("unsupported database {}", config.DB_SWITCH);
         throw new SQLException("unsupported database " + config.DB_SWITCH);
+    }
+  }
+
+  private static AtomicInteger cnt = new AtomicInteger(0);
+  private SummaryStore store = null;
+  private volatile boolean isInited = false;
+
+  public SummaryStore getSummaryStoreDB() throws SQLException{
+    if(isInited){
+      return store;
+    }
+    synchronized (this){
+      if(!isInited){
+        try {
+          cnt.getAndIncrement();
+          LOGGER.info("summary store init number:{}", cnt.get());
+          store = new SummaryStore(SummaryStoreDB.storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
+          isInited = true;
+        } catch (Exception e) {
+          e.printStackTrace();
+          throw new SQLException(
+              "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
+        }
+      }
+      return store;
     }
   }
 

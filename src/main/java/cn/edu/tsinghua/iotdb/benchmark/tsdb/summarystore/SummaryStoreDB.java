@@ -21,37 +21,20 @@ public class SummaryStoreDB implements IDatabase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(cn.edu.tsinghua.iotdb.benchmark.tsdb.opentsdb.OpenTSDB.class);
     private static Config config = ConfigDescriptor.getInstance().getConfig();
-    private static final String storeLoc = "./tdstore";
+    public static final String storeLoc = "./tdstore";
     private Set<Long> groupIDMap = new HashSet<>();
-    private static SummaryStore store = null;
-
-    public static synchronized SummaryStore getStore() throws TsdbException{
-        if(store == null){
-            try {
-                store = new SummaryStore(storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
-            } catch (Exception e) {
-                throw new TsdbException(
-                        "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
-            }
-        }
-        return store;
-    }
+    private SummaryStore store = null;
 
     /**
      * constructor.
      */
-    public SummaryStoreDB() {
+    public SummaryStoreDB(SummaryStore store) {
         config = ConfigDescriptor.getInstance().getConfig();
+        this.store = store;
     }
 
     @Override
     public void init() throws TsdbException {
-        try {
-            store = getStore();
-        } catch (Exception e) {
-            throw new TsdbException(
-                    "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
-        }
     }
 
     // no need for summaryStoreDB
