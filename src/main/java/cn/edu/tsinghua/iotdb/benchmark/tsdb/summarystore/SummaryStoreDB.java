@@ -88,23 +88,28 @@ public class SummaryStoreDB implements IDatabase {
                         new SumOperator(),
                         new MaxOperator(),
                         new MinOperator());
-                List<Record> records = batch.getRecords();
-                for (Record record : records) {
-                    //System.out.println("StreamNum=" + streamNum+ " groupName="+groupName);
-                    Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
-                    store.append(groupID, record.getTimestamp(), dataValue);
-                }
-            } else {
-                List<Record> records = batch.getRecords();
-                for (Record record : records) {
-		    //System.out.println("StreamNum=" + streamID+ " groupName="+groupName);
-                    //System.out.println("record=" + record);
-                    //System.out.println("recordValue=" + record.getRecordDataValue());
-                    Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
-                    //System.out.println("datavalue=" + dataValue+" ts"+record.getTimestamp());
-		            store.append(groupID, record.getTimestamp(), dataValue);
-                }
             }
+            List<Record> records = batch.getRecords();
+            long batchSize = records.size();
+            long maxTime = 0;
+            long minTime = 9223372036854775806L;
+            double avgTime = 0;
+            for (Record record : records) {
+                Object dataValue = castValue(record.getRecordDataValue().get(0), config.DATA_TYPE);
+                long st = System.nanoTime();
+                store.append(groupID, record.getTimestamp(), dataValue);
+                long en = System.nanoTime();
+                long batchTime = en - st;
+                if (maxTime < batchTime) {
+                    maxTime = batchTime;
+                }
+                if (minTime > batchTime) {
+                    minTime = batchTime;
+                }
+                avgTime += minTime / (double)batchSize;
+            }
+            LOGGER.info("BatchInsertData BatchMax= {} ms, BatchMin= {} ms, BatchAvg = {} ms",
+                    (maxTime / 1000000.0d), (minTime / 1000000.0d), (avgTime / 1000000.0d));
             return new Status(true);
         } catch (Exception e) {
             e.printStackTrace();
