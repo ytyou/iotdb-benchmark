@@ -91,8 +91,8 @@ public class SummaryStoreDB implements IDatabase {
                 }
                 avgTime += minTime / (double)batchSize;
             }
-            LOGGER.info("BatchInsertData BatchMax= {} ms, BatchMin= {} ms, BatchAvg = {} ms",
-                    (maxTime / 1000000.0d), (minTime / 1000000.0d), (avgTime / 1000000.0d));
+            LOGGER.info("BatchInsertData BatchMax= {} ns, BatchMin= {} ns, BatchAvg = {} ns",
+                    maxTime, minTime, avgTime);
             return new Status(true);
         } catch (Exception e) {
             e.printStackTrace();
