@@ -288,7 +288,5 @@ public class DBWrapper implements IDatabase {
     }
   }
 
-  public IDatabase getDb() {
-    return db;
-  }
+
 }

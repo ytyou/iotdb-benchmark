@@ -67,4 +67,7 @@ public class DBFactory {
 
   }
 
+  public SummaryStore getStore() {
+    return store;
+  }
 }

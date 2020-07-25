@@ -26,6 +26,7 @@ import cn.edu.tsinghua.iotdb.benchmark.tsdb.TsdbException;
 import cn.edu.tsinghua.iotdb.benchmark.workload.reader.BasicReader;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DeviceSchema;
+import com.samsung.sra.datastore.storage.BackingStoreException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -136,7 +137,17 @@ public class App {
             executorService.submit(client);
         }
         finalMeasure(executorService, downLatch, measurement, threadsMeasurements, st, clients);
-//        dbWrapper
+
+        if(config.DB_SWITCH.equals(Constants.DB_SUMMARYSTORE)){
+            try {
+                dbFactory.getStore().close();
+            } catch (BackingStoreException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     /**
@@ -232,12 +243,6 @@ public class App {
         } catch (InterruptedException e) {
             LOGGER.error("Exception occurred during waiting for all threads finish.", e);
             Thread.currentThread().interrupt();
-        }
-
-        try {
-            clients.get(0).getDbWrapper().getDb().close();
-        } catch (TsdbException e) {
-            e.printStackTrace();
         }
         long en = System.nanoTime();
         LOGGER.info("All clients finished.");
