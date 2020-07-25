@@ -43,7 +43,8 @@ public class DBFactory {
       case Constants.DB_OPENTS:
         return new OpenTSDB();
       case Constants.DB_SUMMARYSTORE:
-        return new SummaryStoreDB(getSummaryStoreDB());
+        getSummaryStoreDB2();
+        return new SummaryStoreDB(store);
       default:
         LOGGER.error("unsupported database {}", config.DB_SWITCH);
         throw new SQLException("unsupported database " + config.DB_SWITCH);
@@ -52,27 +53,18 @@ public class DBFactory {
 
   private static AtomicInteger cnt = new AtomicInteger(0);
   private SummaryStore store = null;
-  private volatile boolean isInited = false;
 
-  public SummaryStore getSummaryStoreDB() throws SQLException{
-    if(isInited){
-      return store;
+  public void getSummaryStoreDB2() {
+
+    try {
+
+      store = new SummaryStore(SummaryStoreDB.storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
+    } catch (Exception e) {
+     // cnt.getAndIncrement();
+      System.out.println("重复创建："+cnt.getAndIncrement());
+//      e.printStackTrace();
     }
-    synchronized (this){
-      if(!isInited){
-        try {
-          cnt.getAndIncrement();
-          LOGGER.info("summary store init number:{}", cnt.get());
-          store = new SummaryStore(SummaryStoreDB.storeLoc, new SummaryStore.StoreOptions().setKeepReadIndexes(true));
-          isInited = true;
-        } catch (Exception e) {
-          e.printStackTrace();
-          throw new SQLException(
-              "Init SummaryStoreDB client failed, the Message is " + e.getMessage());
-        }
-      }
-      return store;
-    }
+
   }
 
 }

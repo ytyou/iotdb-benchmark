@@ -136,6 +136,7 @@ public class App {
             executorService.submit(client);
         }
         finalMeasure(executorService, downLatch, measurement, threadsMeasurements, st, clients);
+//        dbWrapper
     }
 
     /**
@@ -231,6 +232,12 @@ public class App {
         } catch (InterruptedException e) {
             LOGGER.error("Exception occurred during waiting for all threads finish.", e);
             Thread.currentThread().interrupt();
+        }
+
+        try {
+            clients.get(0).getDbWrapper().getDb().close();
+        } catch (TsdbException e) {
+            e.printStackTrace();
         }
         long en = System.nanoTime();
         LOGGER.info("All clients finished.");

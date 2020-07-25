@@ -155,7 +155,6 @@ public class SummaryStoreDB implements IDatabase {
                 store.flush(value);
                 store.unloadStream(value);
             }
-            store.close();
         } catch (Exception e){
             throw new TsdbException(
                     "Close SummaryStoreDB client failed, the Message is " + e.getMessage());

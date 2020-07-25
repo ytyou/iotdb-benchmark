@@ -64,4 +64,7 @@ public abstract class Client implements Runnable {
 
   abstract void doTest();
 
+  public DBWrapper getDbWrapper() {
+    return dbWrapper;
+  }
 }
