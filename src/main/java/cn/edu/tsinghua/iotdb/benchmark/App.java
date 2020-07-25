@@ -1,5 +1,6 @@
 package cn.edu.tsinghua.iotdb.benchmark;
 
+import ch.qos.logback.core.rolling.DefaultTimeBasedFileNamingAndTriggeringPolicy;
 import cn.edu.tsinghua.iotdb.benchmark.client.Client;
 import cn.edu.tsinghua.iotdb.benchmark.client.Operation;
 import cn.edu.tsinghua.iotdb.benchmark.client.QueryRealDatasetClient;
@@ -19,11 +20,13 @@ import cn.edu.tsinghua.iotdb.benchmark.sersyslog.NetUsage;
 import cn.edu.tsinghua.iotdb.benchmark.sersyslog.OpenFileNumber;
 import cn.edu.tsinghua.iotdb.benchmark.tool.ImportDataFromCSV;
 import cn.edu.tsinghua.iotdb.benchmark.tool.MetaDateBuilder;
+import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBFactory;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBWrapper;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.TsdbException;
 import cn.edu.tsinghua.iotdb.benchmark.workload.reader.BasicReader;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DeviceSchema;
+import com.samsung.sra.datastore.storage.BackingStoreException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -87,7 +90,8 @@ public class App {
         recorder.saveTestConfig();
 
         Measurement measurement = new Measurement();
-        DBWrapper dbWrapper = new DBWrapper(measurement);
+        DBFactory dbFactory = new DBFactory();
+        DBWrapper dbWrapper = new DBWrapper(measurement, dbFactory);
         // register schema if needed
         try {
             dbWrapper.init();
@@ -127,11 +131,23 @@ public class App {
         LOGGER.info("Generating workload buffer...");
         for (int i = 0; i < config.CLIENT_NUMBER; i++) {
             SyntheticClient client = new SyntheticClient(i, downLatch, barrier);
+            client.init(dbFactory);
             clients.add(client);
             st = System.nanoTime();
             executorService.submit(client);
         }
         finalMeasure(executorService, downLatch, measurement, threadsMeasurements, st, clients);
+
+        if(config.DB_SWITCH.equals(Constants.DB_SUMMARYSTORE)){
+            try {
+                dbFactory.getStore().close();
+            } catch (BackingStoreException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     /**
@@ -158,7 +174,8 @@ public class App {
         List<DeviceSchema> deviceSchemaList = BasicReader.getDeviceSchemaList(files, config);
 
         Measurement measurement = new Measurement();
-        DBWrapper dbWrapper = new DBWrapper(measurement);
+        DBFactory dbFactory = new DBFactory();
+        DBWrapper dbWrapper = new DBWrapper(measurement, dbFactory);
         // register schema if needed
         try {
             LOGGER.info("start to init database {}", config.DB_SWITCH);
@@ -208,6 +225,7 @@ public class App {
         ExecutorService executorService = Executors.newFixedThreadPool(config.CLIENT_NUMBER);
         for (int i = 0; i < config.CLIENT_NUMBER; i++) {
             Client client = new RealDatasetClient(i, downLatch, config, threadFiles.get(i), barrier);
+            client.init(dbFactory);
             clients.add(client);
             executorService.submit(client);
         }
@@ -257,6 +275,7 @@ public class App {
         }
 
         Measurement measurement = new Measurement();
+        DBFactory dbFactory = new DBFactory();
         CyclicBarrier barrier = new CyclicBarrier(config.CLIENT_NUMBER);
 
         // create CLIENT_NUMBER client threads to do the workloads
@@ -267,6 +286,7 @@ public class App {
         ExecutorService executorService = Executors.newFixedThreadPool(config.CLIENT_NUMBER);
         for (int i = 0; i < config.CLIENT_NUMBER; i++) {
             Client client = new QueryRealDatasetClient(i, downLatch, barrier, config);
+            client.init(dbFactory);
             clients.add(client);
             executorService.submit(client);
         }

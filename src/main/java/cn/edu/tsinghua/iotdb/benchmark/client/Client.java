@@ -3,6 +3,7 @@ package cn.edu.tsinghua.iotdb.benchmark.client;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Measurement;
+import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBFactory;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBWrapper;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.TsdbException;
 import java.util.concurrent.CountDownLatch;
@@ -25,7 +26,11 @@ public abstract class Client implements Runnable {
     this.barrier = barrier;
     clientThreadId = id;
     measurement = new Measurement();
-    dbWrapper = new DBWrapper(measurement);
+   // dbWrapper = new DBWrapper(measurement, new DBFactory());
+  }
+
+  public void init(DBFactory dbFactory) {
+    dbWrapper = new DBWrapper(measurement, dbFactory);
   }
 
   public Measurement getMeasurement() {
@@ -59,4 +64,7 @@ public abstract class Client implements Runnable {
 
   abstract void doTest();
 
+  public DBWrapper getDbWrapper() {
+    return dbWrapper;
+  }
 }
