@@ -170,6 +170,9 @@ public class ConfigDescriptor {
 				config.WINDOW_SIZE = Integer.parseInt(properties.getProperty("WINDOW_SIZE", config.WINDOW_SIZE+""));
 				config.IS_POISSON_DATA = Boolean.parseBoolean(properties.getProperty("IS_POISSON_DATA", config.IS_POISSON_DATA+""));
 				config.P_RANDOM = Integer.parseInt(properties.getProperty("P_RANDOM", config.P_RANDOM+""));
+				config.IS_PARETO_DATA = Boolean.parseBoolean(properties.getProperty("IS_PARETO_DATA", config.IS_PARETO_DATA+""));
+				config.PRTMIN = Double.parseDouble(properties.getProperty("PRTMIN", config.PRTMIN+""));
+				config.PRTALPHA = Double.parseDouble(properties.getProperty("PRTALPHA", config.PRTALPHA+""));
 
         config.REAL_INSERT_RATE = Double.parseDouble(properties.getProperty("REAL_INSERT_RATE", config.REAL_INSERT_RATE+""));
 				if(config.REAL_INSERT_RATE <= 0 || config.REAL_INSERT_RATE > 1) {

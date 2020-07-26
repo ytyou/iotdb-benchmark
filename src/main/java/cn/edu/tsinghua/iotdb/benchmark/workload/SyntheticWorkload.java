@@ -4,6 +4,7 @@ import cn.edu.tsinghua.iotdb.benchmark.client.Operation;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
+import cn.edu.tsinghua.iotdb.benchmark.distribution.ParetoDistribution;
 import cn.edu.tsinghua.iotdb.benchmark.distribution.PoissonDistribution;
 import cn.edu.tsinghua.iotdb.benchmark.distribution.NonUniformDistributionV2;
 import cn.edu.tsinghua.iotdb.benchmark.distribution.ProbTool;
@@ -39,6 +40,8 @@ public class SyntheticWorkload implements IWorkload {
   private Map<Operation, Long> operationLoops;
   private NonUniformDistributionV2[] poissonList;
   private long [] poissonValue;
+  private ParetoDistribution[] paretoList;
+  private long [] paretoValue;
   private static Random random = new Random();
   private static final String DECIMAL_FORMAT = "%." + config.NUMBER_OF_DECIMAL_DIGIT + "f";
   private static Random dataRandom = new Random(config.DATA_SEED);
@@ -64,6 +67,14 @@ public class SyntheticWorkload implements IWorkload {
       for (int i = 0; i < config.DEVICE_NUMBER; i++) {
         poissonList[i] = new NonUniformDistributionV2(config.P_RANDOM + i);
         poissonValue[i] = 0;
+      }
+    }
+    if (config.IS_PARETO_DATA) {
+      paretoList = new ParetoDistribution[config.DEVICE_NUMBER];
+      paretoValue = new long[config.DEVICE_NUMBER];
+      for (int i = 0; i < config.DEVICE_NUMBER; i++) {
+        paretoList[i] = new ParetoDistribution(config.P_RANDOM + i);
+        paretoValue[i] = 0;
       }
     }
   }
@@ -188,12 +199,37 @@ public class SyntheticWorkload implements IWorkload {
     return batch;
   }
 
+  private Batch getParetoBatch(DeviceSchema deviceSchema, long loopIndex) {
+    Batch batch = new Batch();
+    long deviceID = deviceSchema.getDeviceId();
+    long currentTimestamp = paretoValue[(int)deviceID];
+    for (long batchOffset = 0; batchOffset < config.BATCH_SIZE; batchOffset++) {
+      long stepOffset = loopIndex * config.BATCH_SIZE + batchOffset;
+      List<String> values = new ArrayList<>();
+      if (currentTimestamp == 0){
+        currentTimestamp = Constants.START_TIMESTAMP;
+      } else {
+        currentTimestamp = currentTimestamp + paretoList[(int)deviceID].getNext();
+      }
+      for(int i = 0; i < config.SENSOR_NUMBER;i++) {
+        values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.WORKLOAD_BUFFER_SIZE)]);
+      }
+      batch.add(currentTimestamp, values);
+      //System.out.println(currentTimestamp + " DEVICEID= "+deviceID);
+    }
+    paretoValue[(int)deviceID] = currentTimestamp;
+    batch.setDeviceSchema(deviceSchema);
+    return batch;
+  }
+
   public Batch getOneBatch(DeviceSchema deviceSchema, long loopIndex) throws WorkloadException {
     if (!config.IS_OVERFLOW) {
-      if (!config.IS_POISSON_DATA) {
+      if (!config.IS_POISSON_DATA && !config.IS_PARETO_DATA) {
         return getOrderedBatch(deviceSchema, loopIndex);
-      } else {
+      } else if (config.IS_POISSON_DATA) {
         return getPoissonBatch(deviceSchema, loopIndex);
+      } else {
+        return getParetoBatch(deviceSchema, loopIndex);
       }
     } else {
       switch (config.OVERFLOW_MODE) {

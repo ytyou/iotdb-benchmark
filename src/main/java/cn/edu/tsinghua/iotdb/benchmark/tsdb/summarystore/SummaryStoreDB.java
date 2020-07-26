@@ -63,7 +63,11 @@ public class SummaryStoreDB implements IDatabase {
             if (!groupIDMap.contains(groupID)){
                 groupIDMap.add(groupID);
                 Windowing windowing = new RationalPowerWindowing(config.SS_P, config.SS_Q, config.SS_R, config.SS_S);
-                CountBasedWBMH wbmh = new CountBasedWBMH(windowing).setBufferSize(config.WINDOW_SIZE);
+                CountBasedWBMH wbmh = new CountBasedWBMH(windowing)
+                        .setValuesAreLongs(true)
+                        .setBufferSize(config.WINDOW_SIZE)
+                        .setWindowsPerMergeBatch(100000)
+                        .setParallelizeMerge(20);
                 store.registerStream(groupID, wbmh,
                         new SimpleCountOperator(),
                         new CMSOperator(20, 1000, 0),
