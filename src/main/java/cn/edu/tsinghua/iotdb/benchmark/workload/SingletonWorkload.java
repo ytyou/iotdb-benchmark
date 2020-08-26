@@ -42,6 +42,9 @@ public class SingletonWorkload {
 
   private Batch getOrderedBatch() {
     long curLoop = insertLoop.getAndIncrement();
+    if((curLoop+1) % config.DEVICE_NUMBER == 0){
+      System.out.println((curLoop+1) + " numbers of loop >>>>>>>>>>>>>>>>>>>>>>>>>>");
+    }
     if (curLoop < maxLoop) {
       DeviceSchema deviceSchema = new DeviceSchema((int) (curLoop % config.DEVICE_NUMBER));
       Batch batch = new Batch();
