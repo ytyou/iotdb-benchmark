@@ -74,6 +74,10 @@ public abstract class BaseClient extends Client implements Runnable {
           } else {
             try {
               Batch batch = singletonWorkload.getOneBatch();
+              if(batch == null){
+                service.shutdown();
+                return;
+              }
               if (batch.getDeviceSchema().getDeviceId() < actualDeviceFloor) {
                 dbWrapper.insertOneBatch(batch);
               }

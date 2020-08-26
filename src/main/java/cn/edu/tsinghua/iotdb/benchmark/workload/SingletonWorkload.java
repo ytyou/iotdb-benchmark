@@ -16,6 +16,7 @@ public class SingletonWorkload {
   private ProbTool probTool;
   private Random poissonRandom;
   private AtomicLong insertLoop;
+  private long maxLoop;
   private ConcurrentHashMap<Integer, AtomicLong> deviceMaxTimeIndexMap;
 
   private static class SingletonWorkloadHolder {
@@ -35,18 +36,25 @@ public class SingletonWorkload {
     }
     probTool = new ProbTool();
     poissonRandom = new Random(config.DATA_SEED);
+
+    maxLoop = config.DEVICE_NUMBER * config.LOOP;
   }
 
   private Batch getOrderedBatch() {
     long curLoop = insertLoop.getAndIncrement();
-    DeviceSchema deviceSchema = new DeviceSchema((int) (curLoop % config.DEVICE_NUMBER));
-    Batch batch = new Batch();
-    for (long batchOffset = 0; batchOffset < config.BATCH_SIZE; batchOffset++) {
-      long stepOffset = (curLoop / config.DEVICE_NUMBER) * config.BATCH_SIZE + batchOffset;
-      SyntheticWorkload.addOneRowIntoBatch(batch, stepOffset);
+    if (curLoop < maxLoop) {
+      DeviceSchema deviceSchema = new DeviceSchema((int) (curLoop % config.DEVICE_NUMBER));
+      Batch batch = new Batch();
+      for (long batchOffset = 0; batchOffset < config.BATCH_SIZE; batchOffset++) {
+        long stepOffset = (curLoop / config.DEVICE_NUMBER) * config.BATCH_SIZE + batchOffset;
+        SyntheticWorkload.addOneRowIntoBatch(batch, stepOffset);
+      }
+      batch.setDeviceSchema(deviceSchema);
+      return batch;
+    } else {
+      return null;
     }
-    batch.setDeviceSchema(deviceSchema);
-    return batch;
+
   }
 
   private Batch getDistOutOfOrderBatch() {
