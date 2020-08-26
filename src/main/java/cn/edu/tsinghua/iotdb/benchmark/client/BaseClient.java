@@ -29,6 +29,7 @@ public abstract class BaseClient extends Client implements Runnable {
   private DataSchema dataSchema = DataSchema.getInstance();
   private ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
   private long loopIndex;
+  private long insertedBatchNumber = 0;// for output
 
   public BaseClient(int id, CountDownLatch countDownLatch, CyclicBarrier barrier,
       IWorkload workload) {
@@ -44,13 +45,15 @@ public abstract class BaseClient extends Client implements Runnable {
     //Equals device number when the rate is 1.
     double actualDeviceFloor = config.DEVICE_NUMBER * config.REAL_INSERT_RATE;
 
+
     // print current progress periodically
     service.scheduleAtFixedRate(() -> {
-      String percent = String.format("%.2f", (loopIndex + 1) * 100.0D / config.LOOP);
+      String percent = String.format("%.2f", (insertedBatchNumber + 1) * 100.0D / config.LOOP);
       LOGGER.info("{} {}% syntheticWorkload is done.", currentThread, percent);
     }, 1, config.LOG_PRINT_INTERVAL, TimeUnit.SECONDS);
     long start = 0;
-    for (loopIndex = 0; loopIndex < config.LOOP; loopIndex++) {
+
+    for (loopIndex = 0; loopIndex < config.LOOP; loopIndex++, insertedBatchNumber++) {
       //According to the probabilities (proportion) of operations.
       Operation operation = operationController.getNextOperationType();
       if (config.OP_INTERVAL > 0) {
@@ -74,12 +77,13 @@ public abstract class BaseClient extends Client implements Runnable {
           } else {
             try {
               Batch batch = singletonWorkload.getOneBatch();
-              if(batch == null){
+              if (batch == null) {
                 service.shutdown();
                 return;
               }
               if (batch.getDeviceSchema().getDeviceId() < actualDeviceFloor) {
                 dbWrapper.insertOneBatch(batch);
+                loopIndex--;
               }
             } catch (Exception e) {
               LOGGER.error("Failed to insert one batch data because ", e);
