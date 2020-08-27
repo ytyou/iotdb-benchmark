@@ -7,6 +7,7 @@ import cn.edu.tsinghua.iotdb.benchmark.measurement.Measurement;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.ITestDataPersistence;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.PersistenceFactory;
+import cn.edu.tsinghua.iotdb.benchmark.tsdb.iotdb.IoTDBSession;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeQuery;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeValueQuery;
@@ -26,6 +27,7 @@ public class DBWrapper implements IDatabase {
   private static final Logger LOGGER = LoggerFactory.getLogger(DBWrapper.class);
   private static Config config = ConfigDescriptor.getInstance().getConfig();
   private IDatabase db;
+  private IoTDBSession session;
   private static final double NANO_TO_SECOND = 1000000000.0d;
   private static final double NANO_TO_MILLIS = 1000000.0d;
   private Measurement measurement;
@@ -235,6 +237,7 @@ public class DBWrapper implements IDatabase {
     long en = 0;
     long st = 0;
     LOGGER.info("Registering schema...");
+
     try {
       if (config.CREATE_SCHEMA) {
         st = System.nanoTime();

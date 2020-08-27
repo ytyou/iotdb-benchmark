@@ -74,7 +74,6 @@ public class IoTDBSession extends IoTDB {
       for (DeviceSchema deviceSchema : schemaList) {
         int sensorIndex = 0;
         for (String sensor : deviceSchema.getSensors()) {
-
           paths.add(Constants.ROOT_SERIES_NAME
               + "." + deviceSchema.getGroup()
               + "." + deviceSchema.getDevice()
@@ -84,6 +83,22 @@ public class IoTDBSession extends IoTDB {
           dataTypes.add(type);
           TSEncoding.valueOf(getEncodingType(typeString));
           compressors.add(CompressionType.findByShortName(config.COMPRESSOR));
+          count++;
+          sensorIndex++;
+          if (count % 5000 == 0) {
+            try {
+              session
+                  .createMultiTimeseries(paths, dataTypes, encodings, compressors,
+                      Collections.emptyList(),
+                      Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+            } catch (IoTDBConnectionException | StatementExecutionException e) {
+              e.printStackTrace();
+            }
+            paths = new ArrayList<>();
+            dataTypes = new ArrayList<>();
+            encodings = new ArrayList<>();
+            compressors = new ArrayList<>();
+          }
         }
       }
       try {
@@ -92,7 +107,11 @@ public class IoTDBSession extends IoTDB {
                 Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
       } catch (IoTDBConnectionException | StatementExecutionException e) {
-        e.printStackTrace();
+        // ignore if already has the time series
+        if (!e.getMessage().contains(ALREADY_KEYWORD) && !e.getMessage().contains("300")) {
+          LOGGER.error("Register IoTDB schema failed because ", e);
+          throw new TsdbException(e);
+        }
       }
     }
   }
