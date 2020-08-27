@@ -81,7 +81,7 @@ public class IoTDBSession extends IoTDB {
           String typeString = getNextDataTypeString(sensorIndex);
           TSDataType type = TSDataType.valueOf(typeString);
           dataTypes.add(type);
-          TSEncoding.valueOf(getEncodingType(typeString));
+          encodings.add(TSEncoding.valueOf(getEncodingType(typeString)));
           compressors.add(CompressionType.findByShortName(config.COMPRESSOR));
           count++;
           sensorIndex++;
