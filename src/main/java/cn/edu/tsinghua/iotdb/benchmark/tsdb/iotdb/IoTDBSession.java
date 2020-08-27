@@ -89,8 +89,8 @@ public class IoTDBSession extends IoTDB {
             try {
               session
                   .createMultiTimeseries(paths, dataTypes, encodings, compressors,
-                      Collections.emptyList(),
-                      Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+                      null,
+                      null, null, null);
             } catch (IoTDBConnectionException | StatementExecutionException e) {
               e.printStackTrace();
             }
@@ -107,8 +107,8 @@ public class IoTDBSession extends IoTDB {
         }
         session
             .createMultiTimeseries(paths, dataTypes, encodings, compressors,
-                Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+                null,
+                null, null, null);
       } catch (IoTDBConnectionException | StatementExecutionException e) {
         // ignore if already has the time series
         if (!e.getMessage().contains(ALREADY_KEYWORD) && !e.getMessage().contains("300")) {
