@@ -107,6 +107,7 @@ public class App {
                     schemaList.addAll(schemas);
                 }
                 dbWrapper.registerSchema(schemaList);
+                System.out.println("Finished registering:");
                 Scanner scanner = new Scanner(System.in);
                 int x = scanner.nextInt();
             } catch (TsdbException e) {
