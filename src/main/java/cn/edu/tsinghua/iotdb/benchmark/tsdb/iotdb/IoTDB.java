@@ -109,7 +109,7 @@ public class IoTDB implements IDatabase {
         for (DeviceSchema deviceSchema : schemaList) {
           int sensorIndex = 0;
           for (String sensor : deviceSchema.getSensors()) {
-            String dataType = getNextDataType(sensorIndex);
+            String dataType = getNextDataTypeString(sensorIndex);
             String createSeriesSql = String.format(CREATE_SERIES_SQL,
                 Constants.ROOT_SERIES_NAME
                     + "." + deviceSchema.getGroup()
@@ -137,7 +137,7 @@ public class IoTDB implements IDatabase {
     }
   }
 
-  String getNextDataType(int sensorIndex) {
+  String getNextDataTypeString(int sensorIndex) {
     List<Double> proportion = resolveDataTypeProportion();
     double[] p = new double[TSDataType.values().length + 1];
     p[0] = 0.0;
@@ -169,6 +169,27 @@ public class IoTDB implements IDatabase {
       default:
         LOGGER.error("Unsupported data type {}, use default data type: TEXT.", i);
         return "TEXT";
+    }
+  }
+
+  public TSDataType getNextDatatype(int sensorIndex){
+    String typeString = getNextDataTypeString(sensorIndex);
+    switch (typeString) {
+      case "BOOLEAN":
+        return TSDataType.BOOLEAN;
+      case "INT32":
+        return TSDataType.INT32;
+      case "INT64":
+        return TSDataType.INT64;
+      case "FLOAT":
+        return TSDataType.FLOAT;
+      case "DOUBLE":
+        return TSDataType.DOUBLE;
+      case "TEXT":
+        return TSDataType.TEXT;
+      default:
+        LOGGER.error("Unsupported data type {}, use default data type: TEXT.", typeString);
+        return TSDataType.TEXT;
     }
   }
 
@@ -359,7 +380,7 @@ public class IoTDB implements IDatabase {
     builder.append(timestamp);
     int sensorIndex = 0;
     for (Object value : values) {
-      switch (getNextDataType(sensorIndex)) {
+      switch (getNextDataTypeString(sensorIndex)) {
         case "BOOLEAN":
         case "INT32":
         case "INT64":

@@ -72,7 +72,7 @@ public class IoTDBClusterSession extends IoTDB {
     List<MeasurementSchema> schemaList = new ArrayList<>();
     int sensorIndex = 0;
     for (String sensor : batch.getDeviceSchema().getSensors()) {
-      String dataType = getNextDataType(sensorIndex);
+      String dataType = getNextDataTypeString(sensorIndex);
       schemaList.add(new MeasurementSchema(sensor, Enum.valueOf(TSDataType.class, dataType),
           Enum.valueOf(TSEncoding.class, getEncodingType(dataType))));
       sensorIndex++;
@@ -92,7 +92,7 @@ public class IoTDBClusterSession extends IoTDB {
       timestamps[recordIndex] = currentTime;
       for (int recordValueIndex = 0; recordValueIndex < record.getRecordDataValue().size();
           recordValueIndex++) {
-        switch (getNextDataType(sensorIndex)) {
+        switch (getNextDataTypeString(sensorIndex)) {
           case "BOOLEAN":
             boolean[] sensorsBool = (boolean[]) values[recordValueIndex];
             sensorsBool[recordIndex] = (boolean) record.getRecordDataValue().get(
