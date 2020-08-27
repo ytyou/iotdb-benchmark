@@ -40,6 +40,7 @@ public class IoTDBSession extends IoTDB {
     }
   }
 
+
   @Override
   public Status insertOneBatch(Batch batch) {
     List<MeasurementSchema> schemaList = new ArrayList<>();

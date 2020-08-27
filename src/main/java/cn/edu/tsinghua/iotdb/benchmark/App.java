@@ -36,6 +36,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -106,6 +107,8 @@ public class App {
                     schemaList.addAll(schemas);
                 }
                 dbWrapper.registerSchema(schemaList);
+                Scanner scanner = new Scanner(System.in);
+                int x = scanner.nextInt();
             } catch (TsdbException e) {
                 LOGGER.error("Register {} schema failed because ", config.DB_SWITCH, e);
             }
