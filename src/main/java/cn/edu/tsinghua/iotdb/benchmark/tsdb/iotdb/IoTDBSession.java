@@ -102,6 +102,9 @@ public class IoTDBSession extends IoTDB {
         }
       }
       try {
+        if(paths.isEmpty()){
+          return;
+        }
         session
             .createMultiTimeseries(paths, dataTypes, encodings, compressors,
                 Collections.emptyList(),
