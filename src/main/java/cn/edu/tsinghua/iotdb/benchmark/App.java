@@ -109,7 +109,7 @@ public class App {
                 dbWrapper.registerSchema(schemaList);
                 System.out.println("Finished registering:");
                 Scanner scanner = new Scanner(System.in);
-                int x = scanner.nextInt();
+                scanner.nextLine();
             } catch (TsdbException e) {
                 LOGGER.error("Register {} schema failed because ", config.DB_SWITCH, e);
             }
