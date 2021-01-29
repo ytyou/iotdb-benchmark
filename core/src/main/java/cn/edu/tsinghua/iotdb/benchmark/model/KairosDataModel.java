@@ -26,6 +26,7 @@ public class KairosDataModel implements Serializable {
     private static final long serialVersionUID = 1L;
     private String name; //full path like root.perform.group_0.d_0.s_0
     private long timestamp;
+    private long genTimestamp; // 用于论文撰写，数据生成时间
     private Object value;
     private Map<String,String> tags=new HashMap<String,String>();
     public String getName() {
@@ -39,6 +40,12 @@ public class KairosDataModel implements Serializable {
     }
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+    public long getGenTimestamp() {
+        return genTimestamp;
+    }
+    public void setGenTimestamp(long genTimestamp) {
+        this.genTimestamp = genTimestamp;
     }
 
     public Object getValue() {

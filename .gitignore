@@ -22,6 +22,7 @@
 *.gz
 *.tar.gz
 *.tar
+*.csv
 
 ./conf/*.properties
 **/routine

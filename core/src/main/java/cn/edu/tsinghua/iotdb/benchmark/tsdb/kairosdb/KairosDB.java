@@ -102,18 +102,19 @@ public class KairosDB implements IDatabase {
 
 
   private LinkedList<KairosDataModel> createDataModel(DeviceSchema deviceSchema, long timestamp,
-      List<String> recordValues) {
+      long genTime, List<String> recordValues) {
     LinkedList<KairosDataModel> models = new LinkedList<>();
-    String groupId = deviceSchema.getGroup();
+//    String groupId = deviceSchema.getGroup();
     int i = 0;
     for (String sensor : deviceSchema.getSensors()) {
       KairosDataModel model = new KairosDataModel();
       model.setName(sensor);
       // TODO: KairosDB do not support float as data type, use double instead.
       model.setTimestamp(timestamp);
+      model.setGenTimestamp(genTime);
       model.setValue(recordValues.get(i));
       Map<String, String> tags = new HashMap<>();
-      tags.put(GROUP_STR, groupId);
+//      tags.put(GROUP_STR, groupId);
       tags.put(DEVICE_STR, deviceSchema.getDevice());
       model.setTags(tags);
       models.addLast(model);
@@ -126,8 +127,10 @@ public class KairosDB implements IDatabase {
   public Status insertOneBatch(Batch batch) {
     LinkedList<KairosDataModel> models = new LinkedList<>();
     for (Record record : batch.getRecords()) {
+      // 用于记录数据生成的时间戳
+      long genTime = System.currentTimeMillis();
       models.addAll(createDataModel(batch.getDeviceSchema(), record.getTimestamp(),
-          DBUtil.recordTransform(record.getRecordDataValue())));
+          genTime, DBUtil.recordTransform(record.getRecordDataValue())));
     }
     String body = JSON.toJSONString(models);
     LOGGER.debug("body: {}", body);
@@ -147,8 +150,9 @@ public class KairosDB implements IDatabase {
     LinkedList<KairosDataModel> models = new LinkedList<>();
     int colIndex = batch.getColIndex();
     for (Record record : batch.getRecords()) {
+      long genTime = System.currentTimeMillis();
       models.addAll(createDataModel(batch.getDeviceSchema(), record.getTimestamp(),
-          DBUtil.recordTransform(record.getRecordDataValue(),colIndex)));
+          genTime, DBUtil.recordTransform(record.getRecordDataValue(),colIndex)));
     }
     String body = JSON.toJSONString(models);
     LOGGER.debug("body: {}", body);
