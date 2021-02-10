@@ -9,6 +9,7 @@ import cn.edu.tsinghua.iotdb.benchmark.measurement.enums.TotalResult;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.ITestDataPersistence;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.PersistenceFactory;
 import com.clearspring.analytics.stream.quantile.TDigest;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.BufferedWriter;
@@ -28,11 +29,22 @@ public class Measurement {
   private static final Map<Operation, Double> operationLatencySumAllClient = new EnumMap<>(Operation.class);
   private double createSchemaTime;
   private double elapseTime;
+  private long unseqNum = 0;
   private final Map<Operation, Double> operationLatencySumThisClient;
   private final Map<Operation, Long> okOperationNumMap;
   private final Map<Operation, Long> failOperationNumMap;
   private final Map<Operation, Long> okPointNumMap;
   private final Map<Operation, Long> failPointNumMap;
+
+  public void incrementUnseqNum(int point){
+    unseqNum += point;
+  }
+
+  public Map<String, Long> getDeviceLatestTimestamp() {
+    return deviceLatestTimestamp;
+  }
+
+  private final Map<String, Long> deviceLatestTimestamp;
   private static final String RESULT_ITEM = "%-20s";
   private static final String LATENCY_ITEM = "%-12s";
   private static final int COMPRESSION = 100;
@@ -50,6 +62,7 @@ public class Measurement {
     okPointNumMap = new EnumMap<>(Operation.class);
     failPointNumMap = new EnumMap<>(Operation.class);
     operationLatencySumThisClient = new EnumMap<>(Operation.class);
+    deviceLatestTimestamp = new ConcurrentHashMap<>();
     for (Operation operation : Operation.values()) {
       okOperationNumMap.put(operation, 0L);
       failOperationNumMap.put(operation, 0L);
@@ -124,6 +137,7 @@ public class Measurement {
    * @param m measurement to be merged
    */
   public void mergeMeasurement(Measurement m) {
+    unseqNum += m.unseqNum;
     for (Operation operation : Operation.values()) {
       okOperationNumMap
               .put(operation, okOperationNumMap.get(operation) + m.getOkOperationNum(operation));
@@ -168,6 +182,7 @@ public class Measurement {
     System.out.println(Thread.currentThread().getName() + " measurements:");
     System.out.println("Create schema cost " + String.format("%.2f", createSchemaTime) + " second");
     System.out.println("Test elapsed time (not include schema creation): " + String.format("%.2f", elapseTime) + " second");
+    System.out.println("Total unseq num :" + unseqNum);
     recorder.saveResult("total", TotalResult.CREATE_SCHEMA_TIME.getName(), "" + createSchemaTime);
     recorder.saveResult("total", TotalResult.ELAPSED_TIME.getName(), "" + elapseTime);
 

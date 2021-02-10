@@ -8,9 +8,10 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import cn.edu.tsinghua.iotdb.benchmark.utils.ReadWriteIOUtils;
 
-public class Record {
+public class Record implements Comparable {
 
   private long timestamp;
+  private long arrivalTimeStamp;
   private List<String> recordDataValue;
 
   public Record(long timestamp, List<String> recordDataValue) {
@@ -32,7 +33,7 @@ public class Record {
   public String toString() {
     return "Record{" +
         "timestamp=" + timestamp +
-        ", recordDataValue=" + recordDataValue +
+        ", arrivalTime=" + arrivalTimeStamp +
         '}';
   }
 
@@ -42,6 +43,14 @@ public class Record {
 
   public long getTimestamp() {
     return timestamp;
+  }
+
+  public long getArrivalTimeStamp() {
+    return arrivalTimeStamp;
+  }
+
+  public void setArrivalTimeStamp(long arrivalTimeStamp) {
+    this.arrivalTimeStamp = arrivalTimeStamp;
   }
 
   public List<String> getRecordDataValue() {
@@ -85,5 +94,18 @@ public class Record {
         .append(timestamp)
         .append(recordDataValue)
         .toHashCode();
+  }
+
+  @Override
+  public int compareTo(Object o) {
+    if (this == o) {
+      return 0;
+    }
+
+    if (!(o instanceof Record)) {
+      return -1;
+    }
+    Record obj = (Record) o;
+    return (int) (this.arrivalTimeStamp - obj.arrivalTimeStamp);
   }
 }

@@ -158,7 +158,7 @@ public class SyntheticWorkload implements IWorkload {
 
   private static long getCurrentTimestamp(long stepOffset) {
     long timeStampOffset = config.getPOINT_STEP() * stepOffset;
-    if (config.isIS_OVERFLOW()) {
+    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE()!= 2) {
       timeStampOffset += (long) (random.nextDouble() * config.getPOINT_STEP());
     } else {
       if (config.isIS_RANDOM_TIMESTAMP_INTERVAL()) {
@@ -253,10 +253,23 @@ public class SyntheticWorkload implements IWorkload {
           return getDistOutOfOrderBatch(deviceSchema);
         case 1:
           return getLocalOutOfOrderBatch(deviceSchema, loopIndex);
+        case 2:
+          return getLogNormOutOfOrderBatch(deviceSchema, loopIndex);
         default:
           throw new WorkloadException("Unsupported overflow mode: " + config.getOVERFLOW_MODE());
       }
     }
+  }
+
+  private Batch getLogNormOutOfOrderBatch(DeviceSchema deviceSchema, long loopIndex) {
+    Batch batch = new Batch();
+    for (long batchOffset = 0; batchOffset < config.getBATCH_SIZE(); batchOffset++) {
+      long stepOffset = loopIndex * config.getBATCH_SIZE() + batchOffset;
+      addOneRowIntoBatch(batch, stepOffset);
+    }
+    Collections.sort(batch.getRecords());
+    batch.setDeviceSchema(deviceSchema);
+    return batch;
   }
   
   @Override

@@ -669,6 +669,43 @@ public class Config {
 	/**乱序模式*/
 	private int OVERFLOW_MODE = 0;
 
+	public int getMAX_DELAY() {
+		return MAX_DELAY;
+	}
+
+	public void setMAX_DELAY(int MAX_DELAY) {
+		this.MAX_DELAY = MAX_DELAY;
+	}
+
+	public int getMEAN_VALUE() {
+		return MEAN_VALUE;
+	}
+
+	public void setMEAN_VALUE(int MEAN_VALUE) {
+		this.MEAN_VALUE = MEAN_VALUE;
+	}
+
+	public int getVARIANCE() {
+		return VARIANCE;
+	}
+
+	public void setVARIANCE(int VARIANCE) {
+		this.VARIANCE = VARIANCE;
+	}
+
+	/**
+	 * 长尾延迟的最大值，单位为 ms，默认最大值为 25s
+	 */
+	private int MAX_DELAY = 25000;
+	/**
+	 * 对数正态分布的均值，默认值为 1500ms
+	 */
+	private int MEAN_VALUE = 1500;
+	/**
+	 * 对数正态分布的方差，默认值为 800000
+	 */
+	private int VARIANCE = 800000;
+
 	/**批插入乱序比例*/
 	private double OVERFLOW_RATIO = 1.0;
 

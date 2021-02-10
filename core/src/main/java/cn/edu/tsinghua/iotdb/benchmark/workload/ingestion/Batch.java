@@ -1,5 +1,8 @@
 package cn.edu.tsinghua.iotdb.benchmark.workload.ingestion;
 
+import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
+import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
+import cn.edu.tsinghua.iotdb.benchmark.distribution.LogNormDistribution;
 import cn.edu.tsinghua.iotdb.benchmark.utils.ReadWriteIOUtils;
 import cn.edu.tsinghua.iotdb.benchmark.workload.schema.DeviceSchema;
 import java.io.ByteArrayInputStream;
@@ -12,6 +15,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class Batch {
 
+  protected static Config config = ConfigDescriptor.getInstance().getConfig();
   private DeviceSchema deviceSchema;
   private DeviceSchema deviceSchema_sensor;
   private List<Record> records;
@@ -71,7 +75,11 @@ public class Batch {
   }
 
   public void add(long timestamp, List<String> values) {
-    records.add(new Record(timestamp, values));
+    Record record = new Record(timestamp, values);
+    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE() == 2){
+      record.setArrivalTimeStamp(LogNormDistribution.getInstance().getArrivalTime(timestamp));
+    }
+    records.add(record);
   }
 
   /**

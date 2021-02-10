@@ -9,6 +9,7 @@ import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.ITestDataPersistence;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.PersistenceFactory;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
+import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Record;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeQuery;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeValueQuery;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggValueQuery;
@@ -56,6 +57,15 @@ public class DBWrapper implements IDatabase {
       long en = System.nanoTime();
       status.setTimeCost(en - st);
 
+      String device = batch.getDeviceSchema().getDevice();
+      measurement.getDeviceLatestTimestamp().computeIfAbsent(device, d -> 0L);
+      for (Record record : batch.getRecords()) {
+        if (record.getTimestamp() > measurement.getDeviceLatestTimestamp().get(device)) {
+          measurement.getDeviceLatestTimestamp().put(device, record.getTimestamp());
+        } else {
+          measurement.incrementUnseqNum(config.getSENSOR_NUMBER());
+        }
+      }
       if (status.isOk()) {
         measureOkOperation(status, operation, batch.pointNum());
         if (!config.isIS_QUIET_MODE()) {

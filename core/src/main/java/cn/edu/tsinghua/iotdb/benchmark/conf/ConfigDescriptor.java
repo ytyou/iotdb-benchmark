@@ -153,6 +153,11 @@ public class ConfigDescriptor {
 				config.setMETADATA_FILE_PATH(properties.getProperty("METADATA_FILE_PATH", ""));
 				config.setBATCH_EXECUTE_COUNT(Integer.parseInt(properties.getProperty("BATCH_EXECUTE_COUNT", config.getBATCH_EXECUTE_COUNT()+"")));
 				config.setOVERFLOW_MODE(Integer.parseInt(properties.getProperty("OVERFLOW_MODE", config.getOVERFLOW_MODE()+"")));
+				// for vldb
+				config.setMAX_DELAY(Integer.parseInt(properties.getProperty("MAX_DELAY", config.getMAX_DELAY()+"")));
+				config.setMEAN_VALUE(Integer.parseInt(properties.getProperty("MEAN_VALUE", config.getMEAN_VALUE()+"")));
+				config.setVARIANCE(Integer.parseInt(properties.getProperty("VARIANCE", config.getVARIANCE()+"")));
+
 				config.setMAX_K(Integer.parseInt(properties.getProperty("MAX_K", config.getMAX_K()+"")));
 				config.setLAMBDA(Double.parseDouble(properties.getProperty("LAMBDA", config.getLAMBDA()+"")));
 				config.setIS_RANDOM_TIMESTAMP_INTERVAL(Boolean.parseBoolean(properties.getProperty("IS_RANDOM_TIMESTAMP_INTERVAL", config.isIS_RANDOM_TIMESTAMP_INTERVAL()+"")));
