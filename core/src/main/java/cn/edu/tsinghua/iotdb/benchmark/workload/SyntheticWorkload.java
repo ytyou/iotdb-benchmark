@@ -4,11 +4,13 @@ import cn.edu.tsinghua.iotdb.benchmark.client.Operation;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
+import cn.edu.tsinghua.iotdb.benchmark.distribution.LogNormDistribution;
 import cn.edu.tsinghua.iotdb.benchmark.distribution.PoissonDistribution;
 import cn.edu.tsinghua.iotdb.benchmark.distribution.ProbTool;
 import cn.edu.tsinghua.iotdb.benchmark.function.Function;
 import cn.edu.tsinghua.iotdb.benchmark.function.FunctionParam;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
+import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Record;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeQuery;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeValueQuery;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggValueQuery;
@@ -25,6 +27,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +50,10 @@ public class SyntheticWorkload implements IWorkload {
       "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   private static final String IKR_CHAR_TABLE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   private static final long timeStampConst = getTimestampConst(config.getTIMESTAMP_PRECISION());
+  private Map<DeviceSchema, PriorityQueue<Record>> queue = new HashMap<>();
+  private int[] deviceIndex = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  private int[] sensorIndex = new int[]{230, 231, 232, 233, 234, 235, 236, 237, 238, 239};
+  private int count = 0;
 
   public SyntheticWorkload(int clientId) {
     probTool = new ProbTool();
@@ -232,8 +239,21 @@ public class SyntheticWorkload implements IWorkload {
     for(int i = 0;i < config.getSENSOR_NUMBER();i++) {
         values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
 
-    }      
+    }
     batch.add(currentTimestamp, values);  
+  }
+
+  void addOneRowIntoQueue(DeviceSchema deviceSchema, long stepOffset) {
+    List<String> values = new ArrayList<>();
+    long currentTimestamp = getCurrentTimestamp(stepOffset);
+    for(int i = 0;i < config.getSENSOR_NUMBER();i++) {
+      values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
+    }
+    Record record = new Record(currentTimestamp, values);
+    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE() == 2){
+      record.setArrivalTimeStamp(LogNormDistribution.getInstance().getArrivalTime(currentTimestamp));
+    }
+    queue.computeIfAbsent(deviceSchema, id -> new PriorityQueue<>()).add(record);
   }
   
   static void addOneRowIntoBatch(Batch batch, long stepOffset,int colIndex) {
@@ -265,9 +285,16 @@ public class SyntheticWorkload implements IWorkload {
     Batch batch = new Batch();
     for (long batchOffset = 0; batchOffset < config.getBATCH_SIZE(); batchOffset++) {
       long stepOffset = loopIndex * config.getBATCH_SIZE() + batchOffset;
-      addOneRowIntoBatch(batch, stepOffset);
+      addOneRowIntoQueue(deviceSchema, stepOffset);
     }
-    Collections.sort(batch.getRecords());
+    if (queue.get(deviceSchema).size() > config.getTIME_OUT_BUFFER()) {
+      batch.getRecords().add(queue.get(deviceSchema).poll());
+    }
+    if (loopIndex == config.getLOOP() - 1) {
+      while (!queue.get(deviceSchema).isEmpty()) {
+        batch.getRecords().add(queue.get(deviceSchema).poll());
+      }
+    }
     batch.setDeviceSchema(deviceSchema);
     return batch;
   }
@@ -310,6 +337,21 @@ public class SyntheticWorkload implements IWorkload {
     return queryDevices;
   }
 
+  private List<DeviceSchema> getQueryDeviceSchemaList(boolean anyway)
+      throws WorkloadException {
+    checkQuerySchemaParams();
+    List<DeviceSchema> queryDevices = new ArrayList<>();
+
+    DeviceSchema deviceSchema = new DeviceSchema(deviceIndex[count]);
+    List<String> querySensors = new ArrayList<>();
+    querySensors.add(deviceSchema.getSensors().get(sensorIndex[count]));
+    deviceSchema.setSensors(querySensors);
+
+    queryDevices.add(deviceSchema);
+    count++;
+    return queryDevices;
+  }
+
   private void checkQuerySchemaParams() throws WorkloadException {
     if (!(config.getQUERY_DEVICE_NUM() > 0 && config.getQUERY_DEVICE_NUM() <= config.getDEVICE_NUMBER())) {
       throw new WorkloadException("getQUERY_DEVICE_NUM() is not correct, please check.");
@@ -333,9 +375,11 @@ public class SyntheticWorkload implements IWorkload {
   }
 
   public RangeQuery getRangeQuery() throws WorkloadException {
-    List<DeviceSchema> queryDevices = getQueryDeviceSchemaList();
-    long startTimestamp = getQueryStartTimestamp();
-    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
+    List<DeviceSchema> queryDevices = getQueryDeviceSchemaList(true);
+//    long startTimestamp = getQueryStartTimestamp();
+//    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
+    long startTimestamp = 1537455600000L - 13 * 3600 * 1000L;
+    long endTimestamp = startTimestamp + 1728000;
     return new RangeQuery(queryDevices, startTimestamp, endTimestamp);
   }
 
@@ -348,9 +392,11 @@ public class SyntheticWorkload implements IWorkload {
   }
 
   public AggRangeQuery getAggRangeQuery() throws WorkloadException {
-    List<DeviceSchema> queryDevices = getQueryDeviceSchemaList();
-    long startTimestamp = getQueryStartTimestamp();
-    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
+    List<DeviceSchema> queryDevices = getQueryDeviceSchemaList(true);
+//    long startTimestamp = getQueryStartTimestamp();
+//    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
+    long startTimestamp = 1537455600000L - 7 * 3600 * 1000L;
+    long endTimestamp = startTimestamp + 21600000;
     return new AggRangeQuery(queryDevices, startTimestamp, endTimestamp,
         config.getQUERY_AGGREGATE_FUN());
   }

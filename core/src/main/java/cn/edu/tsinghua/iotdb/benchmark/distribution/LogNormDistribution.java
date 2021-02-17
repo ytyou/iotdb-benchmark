@@ -30,8 +30,14 @@ public class LogNormDistribution {
     this.MAX_DELAY = config.getMAX_DELAY();
     this.MEAN_VALUE = (double) config.getMEAN_VALUE();
     this.VARIANCE = (double) config.getVARIANCE();
-//    this.MEAN_VALUE = 1222.42;
-//    this.VARIANCE = (double) 806396;
+//    10 % overlap with memtable size = 800, interval = 500
+//    this.MAX_DELAY = 240000;
+//    this.MEAN_VALUE = 120000 ;
+//    this.VARIANCE = (double) 120000 * 120000 * 1.44;
+//    5 % overlap
+//    this.MAX_DELAY = 180000;
+//    this.MEAN_VALUE = 60000 ;
+//    this.VARIANCE = (double) 60000 * 60000 * 0.54;
     calculateCDFtoPoint();
 
   }
@@ -63,6 +69,25 @@ public class LogNormDistribution {
     sigma = Math.sqrt(Math.log(1 + VARIANCE / (MEAN_VALUE * MEAN_VALUE)));
   }
 
+  private void printOverlapRate() {
+    // 初始化时间间隔为 500 ms
+    int interval = 500;
+    // memtable 大小为 800
+    int memtableSize = 800;
+    double totalRate = 0;
+    int maxOverlap = MAX_DELAY / interval;
+    for (int i = 1; i <= maxOverlap; i++) {
+      int deltaT = i * interval;
+      double probability = 0;
+      for (int j = 1; j < MAX_DELAY - deltaT; j++) {
+        probability += (range[j] - range[j - 1]) * (1 - range[j + deltaT]);
+      }
+      totalRate += probability;
+      System.out.println("overlap index:" + i + ",  rate:" + probability);
+    }
+    System.out.println("total overlap rate:" + totalRate/memtableSize);
+  }
+
   public long getArrivalTime(long timestamp) {
     double rand = random.nextDouble();
     for (int i = 1; i <= MAX_DELAY; i++) {
@@ -75,9 +100,10 @@ public class LogNormDistribution {
 
   public static void main(String[] args) {
     LogNormDistribution logNormDistribution = LogNormDistribution.getInstance();
-    for (int i = 1; i < 2000;i++) {
-      System.out.println(logNormDistribution.getArrivalTime(0));
-    }
+//    for (int i = 1; i < 2000; i++) {
+//      System.out.println(logNormDistribution.getArrivalTime(0));
+//    }
+    logNormDistribution.printOverlapRate();
   }
 
 }

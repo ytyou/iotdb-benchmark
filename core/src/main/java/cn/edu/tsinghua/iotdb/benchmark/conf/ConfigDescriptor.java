@@ -157,6 +157,7 @@ public class ConfigDescriptor {
 				config.setMAX_DELAY(Integer.parseInt(properties.getProperty("MAX_DELAY", config.getMAX_DELAY()+"")));
 				config.setMEAN_VALUE(Integer.parseInt(properties.getProperty("MEAN_VALUE", config.getMEAN_VALUE()+"")));
 				config.setVARIANCE(Integer.parseInt(properties.getProperty("VARIANCE", config.getVARIANCE()+"")));
+				config.setTIME_OUT_BUFFER(Integer.parseInt(properties.getProperty("TIME_OUT_BUFFER", config.getTIME_OUT_BUFFER()+"")));
 
 				config.setMAX_K(Integer.parseInt(properties.getProperty("MAX_K", config.getMAX_K()+"")));
 				config.setLAMBDA(Double.parseDouble(properties.getProperty("LAMBDA", config.getLAMBDA()+"")));

@@ -693,6 +693,14 @@ public class Config {
 		this.VARIANCE = VARIANCE;
 	}
 
+	public int getTIME_OUT_BUFFER() {
+		return TIME_OUT_BUFFER;
+	}
+
+	public void setTIME_OUT_BUFFER(int TIME_OUT_BUFFER) {
+		this.TIME_OUT_BUFFER = TIME_OUT_BUFFER;
+	}
+
 	/**
 	 * 长尾延迟的最大值，单位为 ms，默认最大值为 25s
 	 */
@@ -705,6 +713,10 @@ public class Config {
 	 * 对数正态分布的方差，默认值为 800000
 	 */
 	private int VARIANCE = 800000;
+	/**
+	 * 对数正态分布的 time-out buffer
+	 */
+	private int TIME_OUT_BUFFER = 1024;
 
 	/**批插入乱序比例*/
 	private double OVERFLOW_RATIO = 1.0;
