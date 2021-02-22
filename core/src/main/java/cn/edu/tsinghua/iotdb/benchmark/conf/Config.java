@@ -685,11 +685,11 @@ public class Config {
 		this.MEAN_VALUE = MEAN_VALUE;
 	}
 
-	public int getVARIANCE() {
+	public long getVARIANCE() {
 		return VARIANCE;
 	}
 
-	public void setVARIANCE(int VARIANCE) {
+	public void setVARIANCE(long VARIANCE) {
 		this.VARIANCE = VARIANCE;
 	}
 
@@ -712,7 +712,7 @@ public class Config {
 	/**
 	 * 对数正态分布的方差，默认值为 800000
 	 */
-	private int VARIANCE = 800000;
+	private long VARIANCE = 800000;
 	/**
 	 * 对数正态分布的 time-out buffer
 	 */
