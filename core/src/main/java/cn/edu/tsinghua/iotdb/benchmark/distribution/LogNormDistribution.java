@@ -38,6 +38,14 @@ public class LogNormDistribution {
 //    this.MAX_DELAY = 180000;
 //    this.MEAN_VALUE = 60000 ;
 //    this.VARIANCE = (double) 60000 * 60000 * 0.54;
+//    3 % overlap
+//    this.MAX_DELAY = 120000;
+//    this.MEAN_VALUE = 30000 ;
+//    this.VARIANCE = (double) 30000 * 30000 * 0.95;
+//    2 % overlap
+//    this.MAX_DELAY = 90000;
+//    this.MEAN_VALUE = 20000 ;
+//    this.VARIANCE = (double) 20000 * 20000 * 0.95;
     calculateCDFtoPoint();
 
   }

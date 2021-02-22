@@ -29,12 +29,17 @@ public class Measurement {
   private static final Map<Operation, Double> operationLatencySumAllClient = new EnumMap<>(Operation.class);
   private double createSchemaTime;
   private double elapseTime;
+  private double totalInsertTime = 0;
   private long unseqNum = 0;
   private final Map<Operation, Double> operationLatencySumThisClient;
   private final Map<Operation, Long> okOperationNumMap;
   private final Map<Operation, Long> failOperationNumMap;
   private final Map<Operation, Long> okPointNumMap;
   private final Map<Operation, Long> failPointNumMap;
+
+  public void incrementInsertTime(double insertLatency) {
+    totalInsertTime += insertLatency;
+  }
 
   public void incrementUnseqNum(int point){
     unseqNum += point;
@@ -138,6 +143,7 @@ public class Measurement {
    */
   public void mergeMeasurement(Measurement m) {
     unseqNum += m.unseqNum;
+    totalInsertTime = Math.max(totalInsertTime, m.totalInsertTime);
     for (Operation operation : Operation.values()) {
       okOperationNumMap
               .put(operation, okOperationNumMap.get(operation) + m.getOkOperationNum(operation));
@@ -182,7 +188,10 @@ public class Measurement {
     System.out.println(Thread.currentThread().getName() + " measurements:");
     System.out.println("Create schema cost " + String.format("%.2f", createSchemaTime) + " second");
     System.out.println("Test elapsed time (not include schema creation): " + String.format("%.2f", elapseTime) + " second");
-    System.out.println("Total unseq num :" + unseqNum);
+    System.out.println("Total unseq num: " + unseqNum);
+    String insertRate = String.format("%.2f", okPointNumMap.get(Operation.INGESTION) * 1000 / totalInsertTime);
+    System.out.println("Insert rate: " + insertRate);
+    System.out.println("total insert time(ms): " + totalInsertTime);
     recorder.saveResult("total", TotalResult.CREATE_SCHEMA_TIME.getName(), "" + createSchemaTime);
     recorder.saveResult("total", TotalResult.ELAPSED_TIME.getName(), "" + elapseTime);
 

@@ -66,6 +66,7 @@ public class DBWrapper implements IDatabase {
           measurement.incrementUnseqNum(config.getSENSOR_NUMBER());
         }
       }
+      measurement.incrementInsertTime(status.getTimeCost() / NANO_TO_MILLIS);
       if (status.isOk()) {
         measureOkOperation(status, operation, batch.pointNum());
         if (!config.isIS_QUIET_MODE()) {

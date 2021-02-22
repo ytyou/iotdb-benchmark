@@ -52,7 +52,7 @@ public class SyntheticWorkload implements IWorkload {
   private static final long timeStampConst = getTimestampConst(config.getTIMESTAMP_PRECISION());
   private Map<DeviceSchema, PriorityQueue<Record>> queue = new HashMap<>();
   private int[] deviceIndex = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  private int[] sensorIndex = new int[]{230, 231, 232, 233, 234, 235, 236, 237, 238, 239};
+  private int[] sensorIndex = new int[]{490, 491, 492, 493, 494, 495, 496, 497, 498, 499};
   private int count = 0;
 
   public SyntheticWorkload(int clientId) {
@@ -376,10 +376,10 @@ public class SyntheticWorkload implements IWorkload {
 
   public RangeQuery getRangeQuery() throws WorkloadException {
     List<DeviceSchema> queryDevices = getQueryDeviceSchemaList(true);
-//    long startTimestamp = getQueryStartTimestamp();
-//    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
-    long startTimestamp = 1537455600000L - 13 * 3600 * 1000L;
-    long endTimestamp = startTimestamp + 1728000;
+    long startTimestamp = getQueryStartTimestamp();
+    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
+//    long startTimestamp = 1537455600000L - 20 * 3600 * 1000L;
+//    long endTimestamp = startTimestamp + 43200000;
     return new RangeQuery(queryDevices, startTimestamp, endTimestamp);
   }
 
@@ -395,8 +395,8 @@ public class SyntheticWorkload implements IWorkload {
     List<DeviceSchema> queryDevices = getQueryDeviceSchemaList(true);
 //    long startTimestamp = getQueryStartTimestamp();
 //    long endTimestamp = startTimestamp + config.getQUERY_INTERVAL();
-    long startTimestamp = 1537455600000L - 7 * 3600 * 1000L;
-    long endTimestamp = startTimestamp + 21600000;
+    long startTimestamp = 1537455600000L - 22 * 3600 * 1000L;
+    long endTimestamp = startTimestamp + 43200000;
     return new AggRangeQuery(queryDevices, startTimestamp, endTimestamp,
         config.getQUERY_AGGREGATE_FUN());
   }
