@@ -112,7 +112,6 @@ public class IoTDBSession extends IoTDB {
     }
     try {
       session.insertTablet(tablet);
-      session.executeNonQueryStatement("flush");
       tablet.reset();
       return new Status(true);
     } catch (StatementExecutionException e) {
