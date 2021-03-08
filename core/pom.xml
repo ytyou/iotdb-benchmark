@@ -118,6 +118,11 @@
       <artifactId>iotdb-jdbc</artifactId>
       <version>0.11.1</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.iotdb</groupId>
+      <artifactId>iotdb-session</artifactId>
+      <version>0.11.1</version>
+    </dependency>
 
   </dependencies>
   <build>

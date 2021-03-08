@@ -51,8 +51,8 @@ public class SyntheticWorkload implements IWorkload {
   private static final String IKR_CHAR_TABLE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   private static final long timeStampConst = getTimestampConst(config.getTIMESTAMP_PRECISION());
   private Map<DeviceSchema, PriorityQueue<Record>> queue = new HashMap<>();
-  private int[] deviceIndex = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  private int[] sensorIndex = new int[]{490, 491, 492, 493, 494, 495, 496, 497, 498, 499};
+  private int[] deviceIndex = new int[]{0};
+  private int[] sensorIndex = new int[]{0};
   private int count = 0;
 
   public SyntheticWorkload(int clientId) {
