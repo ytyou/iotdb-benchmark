@@ -89,7 +89,7 @@ public class Measurement {
     return failOperationNumMap.get(operation);
   }
 
-  private long getOkPointNum(Operation operation) {
+  public long getOkPointNum(Operation operation) {
     return okPointNumMap.get(operation);
   }
 

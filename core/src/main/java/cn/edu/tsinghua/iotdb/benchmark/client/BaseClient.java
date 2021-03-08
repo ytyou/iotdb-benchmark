@@ -33,6 +33,7 @@ public abstract class BaseClient extends Client implements Runnable {
   private final DataSchema dataSchema = DataSchema.getInstance();
   private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
   private long loopIndex;
+  private long previousCnt = 0;
 
   public BaseClient(int id, CountDownLatch countDownLatch, CyclicBarrier barrier,
       IWorkload workload) {
@@ -51,7 +52,11 @@ public abstract class BaseClient extends Client implements Runnable {
     // print current progress periodically
     service.scheduleAtFixedRate(() -> {
       String percent = String.format("%.2f", (loopIndex + 1) * 100.0D / config.getLOOP());
-      LOGGER.info("{} {}% syntheticWorkload is done.", currentThread, percent);
+      long currentCnt = measurement.getOkPointNum(Operation.INGESTION);
+      long ingestionRate = (currentCnt - previousCnt) / config.getLOG_PRINT_INTERVAL();
+      previousCnt = currentCnt;
+      LOGGER.info("{} {}% syntheticWorkload is done. ingestion rate:{}", currentThread, percent,
+          ingestionRate);
     }, 1, config.getLOG_PRINT_INTERVAL(), TimeUnit.SECONDS);
     long start = 0;
 loop:
