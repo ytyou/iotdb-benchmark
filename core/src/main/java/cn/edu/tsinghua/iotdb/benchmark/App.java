@@ -41,6 +41,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,9 @@ public class App {
     private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
     private static final double NANO_TO_SECOND = 1000000000.0d;
     private static final Config config = ConfigDescriptor.getInstance().getConfig();
+    private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+    private static long previousCnt = 0;
+
 
     public static void main(String[] args) throws SQLException {
         if (args == null || args.length == 0) {
@@ -136,6 +141,15 @@ public class App {
             st = System.nanoTime();
             executorService.submit(client);
         }
+        service.scheduleAtFixedRate(() -> {
+            long currentCnt = 0;
+            for (Client client: clients){
+                currentCnt += client.getMeasurement().getOkPointNum(Operation.INGESTION);
+            }
+            long ingestionRate = (currentCnt - previousCnt) / config.getLOG_PRINT_INTERVAL();
+            previousCnt = currentCnt;
+            LOGGER.info("total ingestion rate:{}", ingestionRate);
+        }, 1, config.getLOG_PRINT_INTERVAL(), TimeUnit.SECONDS);
         finalMeasure(executorService, downLatch, measurement, threadsMeasurements, st, clients);
     }
 
