@@ -48,6 +48,7 @@ public class ConfigDescriptor {
 			Properties properties = new Properties();
 			try {
 				properties.load(inputStream);
+				config.setZipf(Double.parseDouble(properties.getProperty("ZIPF", "1.5")));
 				config.setHOST(properties.getProperty("HOST", "no HOST"));
 				config.setPORT(properties.getProperty("PORT", "no PORT"));
 				config.setENABLE_DOUBLE_INSERT(Boolean.parseBoolean(

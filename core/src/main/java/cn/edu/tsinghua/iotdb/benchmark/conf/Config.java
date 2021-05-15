@@ -12,6 +12,14 @@ import javax.xml.bind.Unmarshaller;
 
 public class Config {
 
+	public double getZipf() {
+		return zipf;
+	}
+
+	public void setZipf(double zipf) {
+		this.zipf = zipf;
+	}
+
 	public String getHOST() {
 		return HOST;
 	}
@@ -753,6 +761,8 @@ public class Config {
 	private String INSERT_DATATYPE_PROPORTION = "1:1:1:1:1:1";
 
 	private String ENCODING_BOOLEAN = "PLAIN";
+
+	private double zipf = 1.5;
 
 	private String ENCODING_INT32 = "PLAIN";
 

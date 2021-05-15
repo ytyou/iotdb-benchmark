@@ -1,6 +1,7 @@
 package cn.edu.tsinghua.iotdb.benchmark.workload;
 
 import cn.edu.tsinghua.iotdb.benchmark.client.Operation;
+import cn.edu.tsinghua.iotdb.benchmark.client.Zipf;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
@@ -54,12 +55,13 @@ public class SyntheticWorkload implements IWorkload {
   private int[] deviceIndex = new int[]{0};
   private int[] sensorIndex = new int[]{0};
   private int count = 0;
+  public Zipf zipf;
 
   public SyntheticWorkload(int clientId) {
     probTool = new ProbTool();
     maxTimestampIndexMap = new HashMap<>();
     poissonRandom = new Random(config.getDATA_SEED());
-    for(DeviceSchema schema: DataSchema.getInstance().getClientBindSchema().get(clientId)) {
+    for (DeviceSchema schema : DataSchema.getInstance().getClientBindSchema().get(clientId)) {
       maxTimestampIndexMap.put(schema, 0L);
     }
     queryDeviceRandom = new Random(config.getQUERY_SEED() + clientId);
@@ -67,11 +69,13 @@ public class SyntheticWorkload implements IWorkload {
     for (Operation operation : Operation.values()) {
       operationLoops.put(operation, 0L);
     }
+    // zipf 大小
+    zipf = new Zipf(10000, config.getZipf());
   }
 
   private static String[][] initWorkloadValues() {
     String[][] workloadValues = null;
-    if(!config.getOPERATION_PROPORTION().split(":")[0].equals("0")) {
+    if (!config.getOPERATION_PROPORTION().split(":")[0].equals("0")) {
       workloadValues = new String[config.getSENSOR_NUMBER()][config.getWORKLOAD_BUFFER_SIZE()];
       int sensorIndex = 0;
       for (int j = 0; j < config.getSENSOR_NUMBER(); j++) {
@@ -86,7 +90,8 @@ public class SyntheticWorkload implements IWorkload {
           } else {
             //TEXT case: pick NUMBER_OF_DECIMAL_DIGIT chars to be a String for insertion.
             StringBuilder builder = new StringBuilder();
-            if (ConfigDescriptor.getInstance().getConfig().getDB_SWITCH().equals(Constants.DB_KAIROS)){
+            if (ConfigDescriptor.getInstance().getConfig().getDB_SWITCH()
+                .equals(Constants.DB_KAIROS)) {
               for (int k = 0; k < config.getNUMBER_OF_DECIMAL_DIGIT(); k++) {
                 builder.append(IKR_CHAR_TABLE.charAt(dataRandom.nextInt(IKR_CHAR_TABLE.length())));
               }
@@ -165,7 +170,7 @@ public class SyntheticWorkload implements IWorkload {
 
   private static long getCurrentTimestamp(long stepOffset) {
     long timeStampOffset = config.getPOINT_STEP() * stepOffset;
-    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE()!= 2) {
+    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE() != 2) {
       timeStampOffset += (long) (random.nextDouble() * config.getPOINT_STEP());
     } else {
       if (config.isIS_RANDOM_TIMESTAMP_INTERVAL()) {
@@ -184,12 +189,12 @@ public class SyntheticWorkload implements IWorkload {
     batch.setDeviceSchema(deviceSchema);
     return batch;
   }
-  
-  private Batch getOrderedBatch(DeviceSchema deviceSchema, long loopIndex,int colIndex) {
+
+  private Batch getOrderedBatch(DeviceSchema deviceSchema, long loopIndex, int colIndex) {
     Batch batch = new Batch();
     for (long batchOffset = 0; batchOffset < config.getBATCH_SIZE(); batchOffset++) {
       long stepOffset = loopIndex * config.getBATCH_SIZE() + batchOffset;
-      addOneRowIntoBatch(batch, stepOffset,colIndex);
+      addOneRowIntoBatch(batch, stepOffset, colIndex);
     }
     batch.setDeviceSchema(deviceSchema);
     return batch;
@@ -236,30 +241,34 @@ public class SyntheticWorkload implements IWorkload {
   static void addOneRowIntoBatch(Batch batch, long stepOffset) {
     List<String> values = new ArrayList<>();
     long currentTimestamp = getCurrentTimestamp(stepOffset);
-    for(int i = 0;i < config.getSENSOR_NUMBER();i++) {
-        values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
+    for (int i = 0; i < config.getSENSOR_NUMBER(); i++) {
+      values
+          .add(workloadValues[i][(int) (Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
 
     }
-    batch.add(currentTimestamp, values);  
+    batch.add(currentTimestamp, values);
   }
 
   void addOneRowIntoQueue(DeviceSchema deviceSchema, long stepOffset) {
     List<String> values = new ArrayList<>();
     long currentTimestamp = getCurrentTimestamp(stepOffset);
-    for(int i = 0;i < config.getSENSOR_NUMBER();i++) {
-      values.add(workloadValues[i][(int)(Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
+    for (int i = 0; i < config.getSENSOR_NUMBER(); i++) {
+      values
+          .add(workloadValues[i][(int) (Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
     }
     Record record = new Record(currentTimestamp, values);
-    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE() == 2){
-      record.setArrivalTimeStamp(LogNormDistribution.getInstance().getArrivalTime(currentTimestamp));
+    if (config.isIS_OVERFLOW() && config.getOVERFLOW_MODE() == 2) {
+      record
+          .setArrivalTimeStamp(LogNormDistribution.getInstance().getArrivalTime(currentTimestamp));
     }
     queue.computeIfAbsent(deviceSchema, id -> new PriorityQueue<>()).add(record);
   }
-  
-  static void addOneRowIntoBatch(Batch batch, long stepOffset,int colIndex) {
+
+  static void addOneRowIntoBatch(Batch batch, long stepOffset, int colIndex) {
     List<String> values = new ArrayList<>();
     long currentTimestamp = getCurrentTimestamp(stepOffset);
-    values.add(workloadValues[colIndex][(int)(Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);	    		    
+    values.add(
+        workloadValues[colIndex][(int) (Math.abs(stepOffset) % config.getWORKLOAD_BUFFER_SIZE())]);
     batch.add(currentTimestamp, values);
   }
 
@@ -298,11 +307,12 @@ public class SyntheticWorkload implements IWorkload {
     batch.setDeviceSchema(deviceSchema);
     return batch;
   }
-  
+
   @Override
-  public Batch getOneBatch(DeviceSchema deviceSchema, long loopIndex,int colIndex) throws WorkloadException {
+  public Batch getOneBatch(DeviceSchema deviceSchema, long loopIndex, int colIndex)
+      throws WorkloadException {
     if (!config.isIS_OVERFLOW()) {
-      return getOrderedBatch(deviceSchema, loopIndex,colIndex);
+      return getOrderedBatch(deviceSchema, loopIndex, colIndex);
     } else {
       switch (config.getOVERFLOW_MODE()) {
         case 0:
@@ -342,9 +352,10 @@ public class SyntheticWorkload implements IWorkload {
     checkQuerySchemaParams();
     List<DeviceSchema> queryDevices = new ArrayList<>();
 
-    DeviceSchema deviceSchema = new DeviceSchema(deviceIndex[count]);
+    int a = zipf.next();
+    DeviceSchema deviceSchema = new DeviceSchema(a / config.getSENSOR_NUMBER());
     List<String> querySensors = new ArrayList<>();
-    querySensors.add(deviceSchema.getSensors().get(sensorIndex[count]));
+    querySensors.add(deviceSchema.getSensors().get(a % config.getSENSOR_NUMBER()));
     deviceSchema.setSensors(querySensors);
 
     queryDevices.add(deviceSchema);
@@ -353,10 +364,12 @@ public class SyntheticWorkload implements IWorkload {
   }
 
   private void checkQuerySchemaParams() throws WorkloadException {
-    if (!(config.getQUERY_DEVICE_NUM() > 0 && config.getQUERY_DEVICE_NUM() <= config.getDEVICE_NUMBER())) {
+    if (!(config.getQUERY_DEVICE_NUM() > 0 && config.getQUERY_DEVICE_NUM() <= config
+        .getDEVICE_NUMBER())) {
       throw new WorkloadException("getQUERY_DEVICE_NUM() is not correct, please check.");
     }
-    if (!(config.getQUERY_SENSOR_NUM() > 0 && config.getQUERY_SENSOR_NUM() <= config.getSENSOR_NUMBER())) {
+    if (!(config.getQUERY_SENSOR_NUM() > 0 && config.getQUERY_SENSOR_NUM() <= config
+        .getSENSOR_NUMBER())) {
       throw new WorkloadException("QUERY_SENSOR_NUM is not correct, please check.");
     }
   }
@@ -403,7 +416,8 @@ public class SyntheticWorkload implements IWorkload {
 
   public AggValueQuery getAggValueQuery() throws WorkloadException {
     List<DeviceSchema> queryDevices = getQueryDeviceSchemaList();
-    return new AggValueQuery(queryDevices, config.getQUERY_AGGREGATE_FUN(), config.getQUERY_LOWER_LIMIT());
+    return new AggValueQuery(queryDevices, config.getQUERY_AGGREGATE_FUN(),
+        config.getQUERY_LOWER_LIMIT());
   }
 
   public AggRangeValueQuery getAggRangeValueQuery() throws WorkloadException {
@@ -430,10 +444,10 @@ public class SyntheticWorkload implements IWorkload {
         config.getQUERY_AGGREGATE_FUN());
   }
 
-  private static long getTimestampConst(String timePrecision){
-    if(timePrecision.equals("ms")) {
+  private static long getTimestampConst(String timePrecision) {
+    if (timePrecision.equals("ms")) {
       return 1L;
-    } else if(timePrecision.equals("us")) {
+    } else if (timePrecision.equals("us")) {
       return 1000L;
     } else {
       return 1000000L;
