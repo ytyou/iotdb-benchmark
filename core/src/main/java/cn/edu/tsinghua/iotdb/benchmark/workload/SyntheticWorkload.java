@@ -70,7 +70,7 @@ public class SyntheticWorkload implements IWorkload {
       operationLoops.put(operation, 0L);
     }
     // zipf 大小
-    zipf = new Zipf(10000, config.getZipf());
+    zipf = new Zipf(config.getDEVICE_NUMBER() * config.getSENSOR_NUMBER(), config.getZipf());
   }
 
   private static String[][] initWorkloadValues() {
