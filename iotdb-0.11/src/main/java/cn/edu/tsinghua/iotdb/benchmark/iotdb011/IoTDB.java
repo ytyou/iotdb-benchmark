@@ -200,6 +200,7 @@ public class IoTDB implements IDatabase {
   public Status rangeQuery(RangeQuery rangeQuery) {
     String sql = getRangeQuerySql(rangeQuery.getDeviceSchema(), rangeQuery.getStartTimestamp(),
         rangeQuery.getEndTimestamp());
+    LOGGER.info("query sql:{}", sql);
     return executeQueryAndGetStatus(sql);
   }
 

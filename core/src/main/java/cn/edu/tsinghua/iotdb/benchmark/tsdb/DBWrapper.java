@@ -159,6 +159,7 @@ public class DBWrapper implements IDatabase {
       status = db.rangeQuery(rangeQuery);
       long en = System.nanoTime();
       status.setTimeCost(en - st);
+      LOGGER.info("query latency:{}", (en - st));
       handleQueryOperation(status, operation);
     } catch (Exception e) {
       handleUnexpectedQueryException(operation, e);

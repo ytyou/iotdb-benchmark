@@ -396,10 +396,10 @@ public class SyntheticWorkload implements IWorkload {
     return new RangeQuery(queryDevices, startTimestamp, endTimestamp);
   }
 
-  // 最新数据查询
+  // 最新数据查询, 注意避免内存中的数据, 这里 -1000
   public RangeQuery getRangeQuery(long loopIndex) throws WorkloadException {
     List<DeviceSchema> queryDevices = getQueryDeviceSchemaList(true);
-    long stepOffset = loopIndex * config.getBATCH_SIZE();
+    long stepOffset = loopIndex * config.getBATCH_SIZE() - 1000;
     long endTimestamp = getCurrentTimestamp(stepOffset);
     long startTimestamp = endTimestamp - config.getQUERY_INTERVAL();
     return new RangeQuery(queryDevices, startTimestamp, endTimestamp);
