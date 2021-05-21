@@ -111,6 +111,11 @@ public class RealDatasetWorkLoad implements IWorkload {
   }
 
   @Override
+  public RangeQuery getRangeQuery(long index) throws WorkloadException {
+    return new RangeQuery(deviceSchemaList, startTime, endTime);
+  }
+
+  @Override
   public ValueRangeQuery getValueRangeQuery() {
     return new ValueRangeQuery(deviceSchemaList, startTime, endTime, config.getQUERY_LOWER_LIMIT());
   }

@@ -396,6 +396,15 @@ public class SyntheticWorkload implements IWorkload {
     return new RangeQuery(queryDevices, startTimestamp, endTimestamp);
   }
 
+  // 最新数据查询
+  public RangeQuery getRangeQuery(long loopIndex) throws WorkloadException {
+    List<DeviceSchema> queryDevices = getQueryDeviceSchemaList(true);
+    long stepOffset = loopIndex * config.getBATCH_SIZE();
+    long endTimestamp = getCurrentTimestamp(stepOffset);
+    long startTimestamp = endTimestamp - config.getQUERY_INTERVAL();
+    return new RangeQuery(queryDevices, startTimestamp, endTimestamp);
+  }
+
   public ValueRangeQuery getValueRangeQuery() throws WorkloadException {
     List<DeviceSchema> queryDevices = getQueryDeviceSchemaList();
     long startTimestamp = getQueryStartTimestamp();

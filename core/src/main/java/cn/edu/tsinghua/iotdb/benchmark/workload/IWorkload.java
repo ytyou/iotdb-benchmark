@@ -21,6 +21,9 @@ public interface IWorkload {
 
   RangeQuery getRangeQuery() throws WorkloadException;
 
+  // 最新数据的时间范围查询
+  RangeQuery getRangeQuery(long index) throws WorkloadException;
+
   ValueRangeQuery getValueRangeQuery() throws WorkloadException;
 
   AggRangeQuery getAggRangeQuery() throws WorkloadException;
