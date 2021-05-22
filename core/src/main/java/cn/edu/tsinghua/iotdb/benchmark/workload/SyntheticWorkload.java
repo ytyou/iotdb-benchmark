@@ -352,7 +352,7 @@ public class SyntheticWorkload implements IWorkload {
     checkQuerySchemaParams();
     List<DeviceSchema> queryDevices = new ArrayList<>();
 
-    int a = zipf.next();
+    int a = zipf.next() - 1;
     DeviceSchema deviceSchema = new DeviceSchema(a / config.getSENSOR_NUMBER());
     List<String> querySensors = new ArrayList<>();
     querySensors.add(deviceSchema.getSensors().get(a % config.getSENSOR_NUMBER()));

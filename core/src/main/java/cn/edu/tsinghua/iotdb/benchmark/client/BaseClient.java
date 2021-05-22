@@ -138,7 +138,7 @@ loop:
           break;
         case RANGE_QUERY:
           try {
-            dbWrapper.rangeQuery(syntheticWorkload.getRangeQuery(insertLoopIndex));
+            dbWrapper.rangeQuery(syntheticWorkload.getRangeQuery());
           } catch (Exception e) {
             LOGGER.error("Failed to do range query because ", e);
           }
