@@ -39,7 +39,7 @@ import java.net.URL;
 /** From https://www.cnblogs.com/zhuawang/archive/2012/12/08/2809380.html */
 public class HttpRequest {
   private static PoolingHttpClientConnectionManager cm;
-  private static CloseableHttpClient httpClient;
+  private static CloseableHttpClient httpClient = null;
 
   public static void init() {
     cm = new PoolingHttpClientConnectionManager();
@@ -169,6 +169,10 @@ public class HttpRequest {
       close(out, in);
     }
     return result;
+  }
+
+  public static void close() throws IOException {
+    if (httpClient != null) httpClient.close();
   }
 
   private static void close(PrintWriter out, BufferedReader in) throws IOException {

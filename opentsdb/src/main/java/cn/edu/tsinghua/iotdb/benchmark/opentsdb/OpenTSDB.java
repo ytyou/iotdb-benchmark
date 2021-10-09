@@ -255,6 +255,7 @@ public class OpenTSDB implements IDatabase {
     try {
       if (threadLocalWriter.get() != null) threadLocalWriter.get().close();
       if (threadLocalSocket.get() != null) threadLocalSocket.get().close();
+      HttpRequest.close();
     } catch (Exception e) {
     }
   }
