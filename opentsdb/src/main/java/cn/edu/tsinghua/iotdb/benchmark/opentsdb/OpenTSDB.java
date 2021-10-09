@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.*;
 import java.util.*;
 
 public class OpenTSDB implements IDatabase {
@@ -44,21 +46,29 @@ public class OpenTSDB implements IDatabase {
   private static final Logger LOGGER = LoggerFactory.getLogger(OpenTSDB.class);
   private static final Config config = ConfigDescriptor.getInstance().getConfig();
   private final String queryUrl;
-  private final String writeUrl;
   private final Random sensorRandom;
   private final Map<String, LinkedList<OpenTSDBDataModel>> dataMap = new HashMap<>();
   private final int backScanTime = 24;
+  private String writeHost = null;
+  private int writePort;
+  private ThreadLocal<Socket> threadLocalSocket = null;
+  private ThreadLocal<PrintWriter> threadLocalWriter = null;
 
   /** constructor. */
   public OpenTSDB(DBConfig dbConfig) {
     sensorRandom = new Random(1 + config.getQUERY_SEED());
-    String openUrl = dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0);
-    writeUrl = openUrl + "/api/put?summary ";
-    queryUrl = openUrl + "/api/query";
+    queryUrl =
+        "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/query";
+    writeHost = dbConfig.getHOST().get(0);
+    writePort = Integer.parseInt(dbConfig.getPORT().get(1));
+    threadLocalSocket = new ThreadLocal<Socket>();
+    threadLocalWriter = new ThreadLocal<PrintWriter>();
   }
 
   @Override
-  public void init() throws TsdbException {}
+  public void init() throws TsdbException {
+    HttpRequest.init();
+  }
 
   @Override
   public void cleanup() throws TsdbException {
@@ -86,13 +96,29 @@ public class OpenTSDB implements IDatabase {
   @Override
   public void registerSchema(List<DeviceSchema> schemaList) throws TsdbException {}
 
+  private PrintWriter setupWriter() throws Exception {
+    Socket socket = new Socket(InetAddress.getByName(writeHost), writePort);
+    PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+    threadLocalSocket.set(socket);
+    threadLocalWriter.set(writer);
+    return writer;
+  }
+
   @Override
   public Status insertOneBatch(Batch batch) {
     try {
       // create dataModel
       LinkedList<OpenTSDBDataModel> models = createDataModelByBatch(batch);
-      String sql = JSON.toJSONString(models);
-      HttpRequest.sendPost(writeUrl, sql);
+      StringBuilder builder = new StringBuilder();
+      for (OpenTSDBDataModel model : models) {
+        model.toLines(builder);
+      }
+      PrintWriter writer = threadLocalWriter.get();
+      if (writer == null) {
+        writer = setupWriter();
+      }
+      writer.print(builder.toString());
+      writer.flush();
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -105,8 +131,16 @@ public class OpenTSDB implements IDatabase {
     try {
       // create dataModel
       LinkedList<OpenTSDBDataModel> models = createDataModelByBatch(batch);
-      String sql = JSON.toJSONString(models);
-      HttpRequest.sendPost(writeUrl, sql);
+      StringBuilder builder = new StringBuilder();
+      for (OpenTSDBDataModel model : models) {
+        model.toLines(builder);
+      }
+      PrintWriter writer = threadLocalWriter.get();
+      if (writer == null) {
+        writer = setupWriter();
+      }
+      writer.print(builder.toString());
+      writer.flush();
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -153,7 +187,10 @@ public class OpenTSDB implements IDatabase {
     queryMap.put("msResolution", true);
     queryMap.put("start", aggRangeQuery.getStartTimestamp() - 1);
     queryMap.put("end", aggRangeQuery.getEndTimestamp() + 1);
-    list = getSubQueries(aggRangeQuery.getDeviceSchema(), aggRangeQuery.getAggFun());
+    list = getSubQueries(aggRangeQuery.getDeviceSchema(), "none");
+    for (Map<String, Object> subQuery : list) {
+      subQuery.put("downsample", "0all-" + aggRangeQuery.getAggFun());
+    }
     queryMap.put("queries", list);
     String sql = JSON.toJSONString(queryMap);
     return executeQueryAndGetStatus(sql, false);
@@ -214,7 +251,13 @@ public class OpenTSDB implements IDatabase {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    try {
+      if (threadLocalWriter.get() != null) threadLocalWriter.get().close();
+      if (threadLocalSocket.get() != null) threadLocalSocket.get().close();
+    } catch (Exception e) {
+    }
+  }
 
   private LinkedList<OpenTSDBDataModel> createDataModelByBatch(Batch batch) throws TsdbException {
     DeviceSchema deviceSchema = batch.getDeviceSchema();
