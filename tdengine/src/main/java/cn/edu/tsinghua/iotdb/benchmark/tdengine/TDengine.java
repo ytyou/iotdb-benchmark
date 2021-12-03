@@ -32,6 +32,8 @@ import cn.edu.tsinghua.iotdb.benchmark.tsdb.TsdbException;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Record;
 import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.*;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +48,14 @@ public class TDengine implements IDatabase {
   private static final BaseDataSchema baseDataSchema = BaseDataSchema.getInstance();
 
   private static final String TAOS_DRIVER = "com.taosdata.jdbc.TSDBDriver";
-  private static final String URL_TAOS = "jdbc:TAOS://%s:%s/?user=%s&password=%s";
+  private static final String URL_TAOS = "jdbc:TAOS://%s:%s";
   private static final String CREATE_DATABASE = "create database if not exists %s";
   private static final String SUPER_TABLE = "super";
   private static final String USE_DB = "use %s";
   private static final String CREATE_STABLE =
       "create table if not exists %s (time timestamp, %s) tags(device binary(20))";
   private static final String CREATE_TABLE = "create table if not exists %s using %s tags('%s')";
-  private Connection connection;
+  private HikariDataSource ds;
   private DBConfig dbConfig;
   private static String testDb;
   private static Config config;
@@ -62,6 +64,7 @@ public class TDengine implements IDatabase {
   public TDengine(DBConfig dbConfig) {
     this.dbConfig = dbConfig;
     this.testDb = dbConfig.getDB_NAME();
+    this.ds = null;
   }
 
   @Override
@@ -69,16 +72,20 @@ public class TDengine implements IDatabase {
     config = ConfigDescriptor.getInstance().getConfig();
     try {
       Class.forName(TAOS_DRIVER);
-      connection =
-          DriverManager.getConnection(
-              String.format(
-                  URL_TAOS,
-                  dbConfig.getHOST().get(0),
-                  dbConfig.getPORT().get(0),
-                  dbConfig.getUSERNAME(),
-                  dbConfig.getPASSWORD()));
+      HikariConfig hcfg = new HikariConfig();
+      hcfg.setJdbcUrl(
+          String.format(URL_TAOS, dbConfig.getHOST().get(0), dbConfig.getPORT().get(0)));
+      hcfg.setUsername(dbConfig.getUSERNAME());
+      hcfg.setPassword(dbConfig.getPASSWORD());
+      hcfg.setMinimumIdle(2);
+      hcfg.setMaximumPoolSize(10);
+      hcfg.setConnectionTimeout(10000);
+      hcfg.setIdleTimeout(60000);
+      hcfg.setConnectionTestQuery("describe log.dn");
+      hcfg.setValidationTimeout(3000);
+      this.ds = new HikariDataSource(hcfg);
       LOGGER.info("init success.");
-    } catch (SQLException | ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
   }
@@ -90,13 +97,9 @@ public class TDengine implements IDatabase {
 
   @Override
   public void close() throws TsdbException {
-    if (connection != null) {
-      try {
-        connection.close();
-      } catch (SQLException e) {
-        LOGGER.error("Failed to close TaosDB connection because ", e);
-        throw new TsdbException(e);
-      }
+    if (this.ds != null) {
+      this.ds.close();
+      this.ds = null;
     }
   }
 
@@ -110,7 +113,9 @@ public class TDengine implements IDatabase {
         throw new TsdbException("taosDB do not support more than 1024 column for one table.");
       }
       // create database
+      Connection connection = null;
       try {
+        connection = this.ds.getConnection();
         Statement statement = connection.createStatement();
         statement.execute(String.format(CREATE_DATABASE, testDb));
         statement.execute(String.format(USE_DB, testDb));
@@ -132,6 +137,10 @@ public class TDengine implements IDatabase {
         LOGGER.info(String.format(CREATE_STABLE, SUPER_TABLE, superSql.toString()));
         statement.execute(String.format(CREATE_STABLE, SUPER_TABLE, superSql.toString()));
       } catch (SQLException e) {
+        try {
+          connection.close();
+        } catch (SQLException e2) {
+        }
         // ignore if already has the time series
         LOGGER.error("Register TaosDB schema failed because ", e);
         throw new TsdbException(e);
@@ -157,13 +166,22 @@ public class TDengine implements IDatabase {
         // ignore if already has the time series
         LOGGER.error("Register TaosDB schema failed because ", e);
         throw new TsdbException(e);
+      } finally {
+        try {
+          connection.close();
+        } catch (SQLException e2) {
+        }
       }
     }
   }
 
   @Override
   public Status insertOneBatch(Batch batch) {
-    try (Statement statement = connection.createStatement()) {
+    Connection connection = null;
+    Statement statement = null;
+    try {
+      connection = this.ds.getConnection();
+      statement = connection.createStatement();
       statement.execute(String.format(USE_DB, testDb));
       StringBuilder builder = new StringBuilder();
       DeviceSchema deviceSchema = batch.getDeviceSchema();
@@ -179,12 +197,22 @@ public class TDengine implements IDatabase {
       return new Status(true);
     } catch (Exception e) {
       return new Status(false, 0, e, e.toString());
+    } finally {
+      try {
+        if (statement != null) statement.close();
+        if (connection != null) connection.close();
+      } catch (SQLException e2) {
+      }
     }
   }
 
   @Override
   public Status insertOneSensorBatch(Batch batch) {
-    try (Statement statement = connection.createStatement()) {
+    Connection connection = null;
+    Statement statement = null;
+    try {
+      connection = this.ds.getConnection();
+      statement = connection.createStatement();
       statement.execute(String.format(USE_DB, testDb));
       StringBuilder builder = new StringBuilder();
       DeviceSchema deviceSchema = batch.getDeviceSchema();
@@ -212,6 +240,12 @@ public class TDengine implements IDatabase {
       return new Status(true);
     } catch (Exception e) {
       return new Status(false, 0, e, e.toString());
+    } finally {
+      try {
+        if (statement != null) statement.close();
+        if (connection != null) connection.close();
+      } catch (SQLException e2) {
+      }
     }
   }
 
@@ -440,7 +474,11 @@ public class TDengine implements IDatabase {
     LOGGER.debug("execute sql {}", sql);
     int line = 0;
     int queryResultPointNum = 0;
-    try (Statement statement = connection.createStatement()) {
+    Connection connection = null;
+    Statement statement = null;
+    try {
+      connection = this.ds.getConnection();
+      statement = connection.createStatement();
       statement.execute(String.format(USE_DB, testDb));
       try (ResultSet resultSet = statement.executeQuery(sql)) {
         while (resultSet.next()) {
@@ -453,6 +491,12 @@ public class TDengine implements IDatabase {
       return new Status(false, queryResultPointNum, e, sql);
     } catch (Throwable t) {
       return new Status(false, queryResultPointNum, new Exception(t), sql);
+    } finally {
+      try {
+        if (statement != null) statement.close();
+        if (connection != null) connection.close();
+      } catch (SQLException e2) {
+      }
     }
   }
 
