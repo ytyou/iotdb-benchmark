@@ -98,7 +98,7 @@ public class OpenTSDB implements IDatabase {
 
   private PrintWriter setupWriter() throws Exception {
     Socket socket = new Socket(InetAddress.getByName(writeHost), writePort);
-    PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+    PrintWriter writer = new PrintWriter(socket.getOutputStream(), false);
     threadLocalSocket.set(socket);
     threadLocalWriter.set(writer);
     return writer;

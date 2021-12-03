@@ -31,7 +31,7 @@ TOPIC_NAME=test-topic
 
 ################## Benchmark配置 #######################
 # 总操作次数：具体每种类型操作会按OPERATION_PROPORTION定义的比例划分，例如OPERATION_PROPORTION=1:1:1:1:1:1:1:1:1:1:1
-LOOP=1000000
+LOOP=10000000
 # 目前Benchmark支持多种运行模式，支持模式如下
 # testWithDefaultPath   常规测试模式，支持多种读和写操作的混合负载
 # generateDataMode      生成数据模式，生成Benchmark本身识别的数据
@@ -173,7 +173,7 @@ BATCH_SIZE_PER_WRITE=10
 # 是否在写入数据前，创建SCHEMA
 CREATE_SCHEMA=true
 # 开始写入数据的时间戳
-START_TIME=2018-9-20T00:00:00+08:00
+START_TIME=1973-3-10T00:00:00+08:00
 
 ################## 操作信息：乱序写入 ###################
 # 是否乱序写入
@@ -261,7 +261,7 @@ CSV_FILE_SPLIT=true
 # 是否使用静默模式，静默模式会关闭部分日志输出
 IS_QUIET_MODE=true
 # 测试过程日志的输出间隔，单位为秒
-LOG_PRINT_INTERVAL=5
+LOG_PRINT_INTERVAL=60
 
 ################## 监控模式相关参数 ######################
 # 监控系统性能的网卡信息，比如 eth0

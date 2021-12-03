@@ -261,7 +261,7 @@ CSV_FILE_SPLIT=true
 # 是否使用静默模式，静默模式会关闭部分日志输出
 IS_QUIET_MODE=true
 # 测试过程日志的输出间隔，单位为秒
-LOG_PRINT_INTERVAL=5
+LOG_PRINT_INTERVAL=60
 
 ################## 监控模式相关参数 ######################
 # 监控系统性能的网卡信息，比如 eth0
