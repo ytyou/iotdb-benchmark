@@ -21,7 +21,6 @@ package cn.edu.tsinghua.iotdb.benchmark.opentsdb;
 
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
-import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.schema.DeviceSchema;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBConfig;
@@ -36,8 +35,6 @@ import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.*;
 import java.util.*;
 
@@ -46,23 +43,17 @@ public class OpenTSDB implements IDatabase {
   private static final Logger LOGGER = LoggerFactory.getLogger(OpenTSDB.class);
   private static final Config config = ConfigDescriptor.getInstance().getConfig();
   private final String queryUrl;
+  private final String writeUrl;
   private final Random sensorRandom;
   private final Map<String, LinkedList<OpenTSDBDataModel>> dataMap = new HashMap<>();
   private final int backScanTime = 24;
-  private String writeHost = null;
-  private int writePort;
-  private ThreadLocal<Socket> threadLocalSocket = null;
-  private ThreadLocal<PrintWriter> threadLocalWriter = null;
 
   /** constructor. */
   public OpenTSDB(DBConfig dbConfig) {
     sensorRandom = new Random(1 + config.getQUERY_SEED());
     queryUrl =
         "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/query";
-    writeHost = dbConfig.getHOST().get(0);
-    writePort = Integer.parseInt(dbConfig.getPORT().get(1));
-    threadLocalSocket = new ThreadLocal<Socket>();
-    threadLocalWriter = new ThreadLocal<PrintWriter>();
+    writeUrl = "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/put";
   }
 
   @Override
@@ -71,38 +62,11 @@ public class OpenTSDB implements IDatabase {
   }
 
   @Override
-  public void cleanup() throws TsdbException {
-    // example JDBC_URL:
-    // http://host:4242/api/query?start=2016/02/16-00:00:00&end=2016/02/17-23:59:59&m=avg:1ms-avg:metricname
-    for (int i = 0; i < config.getGROUP_NUMBER(); i++) {
-      String metric = "";
-      String metricName = metric + "group_" + i;
-      String DELETE_METRIC_URL = "%s?start=%s&m=sum:1ms-sum:%s";
-      String deleteMetricURL =
-          String.format(DELETE_METRIC_URL, queryUrl, Constants.START_TIMESTAMP, metricName);
-      String response;
-      try {
-        response = HttpRequest.sendDelete(deleteMetricURL, "");
-        LOGGER.info("Delete old data of {} ...", metricName);
-        LOGGER.debug("Delete request response: {}", response);
-      } catch (IOException e) {
-        LOGGER.error("Delete old OpenTSDB metric {} failed. Error: {}", metricName, e.getMessage());
-        throw new TsdbException(e);
-      }
-    }
-  }
+  public void cleanup() throws TsdbException {}
 
   // no need for opentsdb
   @Override
   public void registerSchema(List<DeviceSchema> schemaList) throws TsdbException {}
-
-  private PrintWriter setupWriter() throws Exception {
-    Socket socket = new Socket(InetAddress.getByName(writeHost), writePort);
-    PrintWriter writer = new PrintWriter(socket.getOutputStream(), false);
-    threadLocalSocket.set(socket);
-    threadLocalWriter.set(writer);
-    return writer;
-  }
 
   @Override
   public Status insertOneBatch(Batch batch) {
@@ -113,12 +77,7 @@ public class OpenTSDB implements IDatabase {
       for (OpenTSDBDataModel model : models) {
         model.toLines(builder);
       }
-      PrintWriter writer = threadLocalWriter.get();
-      if (writer == null) {
-        writer = setupWriter();
-      }
-      writer.print(builder.toString());
-      writer.flush();
+      HttpRequest.sendPost(writeUrl, builder.toString());
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -135,12 +94,7 @@ public class OpenTSDB implements IDatabase {
       for (OpenTSDBDataModel model : models) {
         model.toLines(builder);
       }
-      PrintWriter writer = threadLocalWriter.get();
-      if (writer == null) {
-        writer = setupWriter();
-      }
-      writer.print(builder.toString());
-      writer.flush();
+      HttpRequest.sendPost(writeUrl, builder.toString());
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -253,8 +207,6 @@ public class OpenTSDB implements IDatabase {
   @Override
   public void close() {
     try {
-      if (threadLocalWriter.get() != null) threadLocalWriter.get().close();
-      if (threadLocalSocket.get() != null) threadLocalSocket.get().close();
       HttpRequest.close();
     } catch (Exception e) {
     }
