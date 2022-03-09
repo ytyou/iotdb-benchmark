@@ -98,6 +98,7 @@ public class OpenTSDB implements IDatabase {
 
   private PrintWriter setupWriter() throws Exception {
     Socket socket = new Socket(InetAddress.getByName(writeHost), writePort);
+    socket.setSoLinger(true, 10);
     PrintWriter writer = new PrintWriter(socket.getOutputStream(), false);
     threadLocalSocket.set(socket);
     threadLocalWriter.set(writer);
@@ -303,14 +304,15 @@ public class OpenTSDB implements IDatabase {
 
   private Status executeQueryAndGetStatus(String sql, boolean isLatestPoint) {
     LOGGER.debug("{} query SQL: {}", Thread.currentThread().getName(), sql);
+    String response = "";
     try {
-      String response;
       response = HttpRequest.sendPost(queryUrl, sql);
       int pointNum = getOneQueryPointNum(response, isLatestPoint);
       LOGGER.debug("{} 查到数据点数: {}", Thread.currentThread().getName(), pointNum);
       return new Status(true, pointNum);
     } catch (Exception e) {
       e.printStackTrace();
+      LOGGER.info("response: {}", response);
       return new Status(false, 0, e, sql);
     }
   }
