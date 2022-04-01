@@ -77,6 +77,7 @@ public class InfluxDB implements IDatabase {
   public void init() throws TsdbException {
     try {
       client = InfluxDBClientFactory.create(influxUrl, token.toCharArray(), org, influxDbName);
+      HttpRequestUtil.init();
     } catch (Exception e) {
       LOGGER.error("Initialize InfluxDB failed because ", e);
       throw new TsdbException(e);
@@ -108,6 +109,10 @@ public class InfluxDB implements IDatabase {
   public void close() {
     if (client != null) {
       client.close();
+    }
+    try {
+      HttpRequestUtil.close();
+    } catch (Exception e) {
     }
   }
 

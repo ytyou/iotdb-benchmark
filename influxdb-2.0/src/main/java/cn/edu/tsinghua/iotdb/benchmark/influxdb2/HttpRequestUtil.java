@@ -1,13 +1,32 @@
 package cn.edu.tsinghua.iotdb.benchmark.influxdb2;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLConnection;
 
 public class HttpRequestUtil {
+  private static PoolingHttpClientConnectionManager cm;
+  private static CloseableHttpClient httpClient = null;
+
+  public static void init() {
+    cm = new PoolingHttpClientConnectionManager();
+    cm.setMaxTotal(1024);
+    cm.setDefaultMaxPerRoute(1024);
+    httpClient =
+        HttpClients.custom().setConnectionManager(cm).setConnectionManagerShared(true).build();
+  }
+
   /**
    * Send Get Request to target URL
    *
@@ -17,32 +36,26 @@ public class HttpRequestUtil {
   public static String sendGet(String url) throws Exception {
     StringBuffer result = new StringBuffer();
     BufferedReader in = null;
+    InputStream inputStream = null;
+    CloseableHttpResponse response = null;
     try {
-      URL urlWithParams = new URL(url);
-      // open connection
-      URLConnection connection = urlWithParams.openConnection();
-      // setup property of request
-      connection.setRequestProperty("accept", "*/*");
-      connection.setRequestProperty("connection", "Keep-Alive");
-      connection.setRequestProperty(
-          "user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
-      // create connection
-      connection.connect();
-      // use BufferReader to read response
-
-      in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-      String line;
-      while ((line = in.readLine()) != null) {
-        result.append(line);
+      HttpGet get = new HttpGet(url);
+      response = httpClient.execute(get);
+      HttpEntity entity = response.getEntity();
+      if (entity != null) {
+        inputStream = entity.getContent();
+        in = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        while ((line = in.readLine()) != null) {
+          result.append(line);
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();
       throw e;
     } finally {
       try {
-        if (in != null) {
-          in.close();
-        }
+        release(response, inputStream, in);
       } catch (Exception e2) {
         e2.printStackTrace();
       }
@@ -63,47 +76,62 @@ public class HttpRequestUtil {
     PrintWriter out = null;
     BufferedReader in = null;
     StringBuffer result = new StringBuffer();
+    CloseableHttpResponse response = null;
+    InputStream inputStream = null;
     try {
-      URL realUrl = new URL(url);
-      // open url
-      URLConnection connection = realUrl.openConnection();
-      // setup property of connection
-      connection.setRequestProperty("accept", "*/*");
-      connection.setRequestProperty("connection", "Keep-Alive");
-      connection.setRequestProperty(
-          "user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
-      connection.setRequestProperty("Content-Type", contentType);
-      connection.setRequestProperty("Authorization", "Token " + token);
-      connection.setDoInput(true);
-      connection.setDoOutput(true);
-      // get output stream
-      out = new PrintWriter(connection.getOutputStream());
-      // send body
+      HttpPost post = new HttpPost(url);
       if (body != null) {
-        out.print(body);
+        post.setEntity(new StringEntity(body, "UTF-8"));
       }
-      // flush buffer
-      out.flush();
-      // define BufferReader to read response from url
-      in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-      String line;
-      while ((line = in.readLine()) != null) {
-        result.append(line);
+      post.setHeader("Content-Type", contentType);
+      post.setHeader("Authorization", "Token " + token);
+      response = httpClient.execute(post);
+      HttpEntity entity = response.getEntity();
+      if (entity != null) {
+        inputStream = entity.getContent();
+        // define BufferReader to read response from url
+        in = new BufferedReader(new InputStreamReader(inputStream));
+        String line;
+        while ((line = in.readLine()) != null) {
+          result.append(line);
+        }
       }
     } catch (Exception e) {
       throw e;
     } finally {
-      try {
-        if (out != null) {
-          out.close();
-        }
-        if (in != null) {
-          in.close();
-        }
-      } catch (IOException e2) {
-        throw e2;
-      }
+      release(response, inputStream, in);
     }
     return result.toString();
+  }
+
+  public static void close() throws IOException {
+    if (httpClient != null) httpClient.close();
+  }
+
+  private static void release(
+      CloseableHttpResponse response, InputStream inputStream, BufferedReader reader) {
+    if (reader != null) {
+      try {
+        reader.close();
+      } catch (Throwable t) {
+      }
+    }
+    boolean streamClosed = true;
+    try {
+      if (inputStream != null) {
+        inputStream.close();
+      } else {
+        streamClosed = false;
+      }
+    } catch (IOException ioex) {
+      streamClosed = false;
+    } finally {
+      if (!streamClosed && response != null) {
+        try {
+          response.close();
+        } catch (IOException ioex) {
+        }
+      }
+    }
   }
 }
