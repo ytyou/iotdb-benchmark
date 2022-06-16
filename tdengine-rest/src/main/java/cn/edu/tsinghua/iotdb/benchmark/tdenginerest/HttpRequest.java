@@ -131,7 +131,7 @@ public class HttpRequest {
       post.addHeader("X-Request-ID", reqId);
       response = httpClient.execute(post);
       Header[] headers = response.getHeaders("X-Request-ID");
-      if (!reqId.equals(headers[0].getValue())
+      if (headers!=null && !reqId.equals(headers[0].getValue())
           || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
         throw new IOException("Bad HTTP response received");
       }
