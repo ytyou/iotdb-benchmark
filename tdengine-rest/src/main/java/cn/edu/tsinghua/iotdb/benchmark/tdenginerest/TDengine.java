@@ -20,6 +20,7 @@
 package cn.edu.tsinghua.iotdb.benchmark.tdenginerest;
 
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
+import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.schema.BaseDataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.schema.DeviceSchema;
@@ -80,6 +81,8 @@ public class TDengine implements IDatabase {
 
   @Override
   public void init() {
+    config = ConfigDescriptor.getInstance().getConfig();
+
     HttpRequest.init();
   }
 
@@ -426,7 +429,7 @@ public class TDengine implements IDatabase {
     LOGGER.debug("{} query SQL: {}", Thread.currentThread().getName(), sql);
     String response = "";
     try {
-      response = HttpRequest.sendGet(queryUrl, sql);
+      response = HttpRequest.sendPost(queryUrl, sql);
       int pointNum = getOneQueryPointNum(response);
       LOGGER.debug("{} 查到数据点数: {}", Thread.currentThread().getName(), pointNum);
       return new Status(true, pointNum);
