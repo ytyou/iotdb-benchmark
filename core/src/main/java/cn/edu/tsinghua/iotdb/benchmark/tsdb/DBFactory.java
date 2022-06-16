@@ -98,6 +98,9 @@ public class DBFactory {
         case DB_TDENGINE:
           dbClass = Constants.TDENGINE_CLASS;
           break;
+        case DB_TDENGINE_REST:
+          dbClass = Constants.TDENGINE_REST_CLASS;
+          break;
         case DB_FAKE:
           dbClass = Constants.FAKEDB_CLASS;
           break;

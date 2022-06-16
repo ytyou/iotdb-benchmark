@@ -82,6 +82,9 @@ public class Constants {
   public static final String TIMESCALEDB_CLASS =
       "cn.edu.tsinghua.iotdb.benchmark.timescaledb.TimescaleDB";
   public static final String TDENGINE_CLASS = "cn.edu.tsinghua.iotdb.benchmark.tdengine.TDengine";
+  public static final String TDENGINE_REST_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.tdenginerest.TDengine";
+
   public static final String MSSQLSERVER_CLASS =
       "cn.edu.tsinghua.iotdb.benchmark.mssqlserver.MsSQLServerDB";
   public static final String VICTORIAMETRICS =
