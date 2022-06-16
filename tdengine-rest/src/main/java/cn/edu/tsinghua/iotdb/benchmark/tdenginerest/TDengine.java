@@ -187,14 +187,18 @@ public class TDengine implements IDatabase {
             getInsertOneRecordSql(
                 batch.getDeviceSchema(), record.getTimestamp(), record.getRecordDataValue()));
       }
-      LOGGER.debug("getInsertOneBatchSql: {}", builder.toString());
-
+      // LOGGER.debug("getInsertOneBatchSql: {}", builder.toString());
+/*
       PrintWriter writer = threadLocalWriter.get();
       if (writer == null) {
         writer = setupWriter();
       }
       writer.print(builder.toString());
       writer.flush();
+
+ */
+      HttpRequest.sendPost(queryUrl, builder.toString());
+
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
