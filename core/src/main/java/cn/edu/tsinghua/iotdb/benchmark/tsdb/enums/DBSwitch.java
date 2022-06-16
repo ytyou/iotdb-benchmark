@@ -46,7 +46,7 @@ public enum DBSwitch {
   DB_TIMESCALE(DBType.TimescaleDB, null, null),
   DB_FAKE(DBType.FakeDB, null, null),
   DB_TDENGINE(DBType.TDengine, null, null),
-  DB_TDENGINE_REST(DBType.TDengine, null, null),
+  DB_TDENGINE_REST(DBType.TDengine, null, DBInsertMode.INSERT_USE_REST),
   DB_QUESTDB(DBType.QuestDB, null, null),
   DB_MSSQLSERVER(DBType.MSSQLSERVER, null, null),
   DB_VICTORIAMETRICS(DBType.VictoriaMetrics, null, null),
@@ -82,7 +82,7 @@ public enum DBSwitch {
       }
     }
     DBSwitch db = DBSwitch.DB_IOT_012_SESSION_BY_TABLET;
-    LOGGER.warn("Using default DBType: " + db);
+    LOGGER.warn("Unknown DBSWitch:" + dbSwitch + ". Using default DBType: " + db);
     return db;
   }
 

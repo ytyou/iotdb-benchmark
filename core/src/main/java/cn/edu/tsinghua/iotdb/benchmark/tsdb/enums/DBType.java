@@ -29,7 +29,6 @@ public enum DBType {
   TimescaleDB("TimescaleDB"),
   FakeDB("FakeDB"),
   TDengine("TDengine"),
-  TDengineRest("TDengineRest"),
   QuestDB("QuestDB"),
   MSSQLSERVER("MsSqlServer"),
   VictoriaMetrics("VictoriaMetrics"),
