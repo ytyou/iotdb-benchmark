@@ -83,7 +83,7 @@ public class TDengine implements IDatabase {
   public void init() {
     config = ConfigDescriptor.getInstance().getConfig();
 
-    HttpRequest.init();
+    HttpRequest.init(dbConfig.getUSERNAME(), dbConfig.getPASSWORD());
   }
 
   @Override

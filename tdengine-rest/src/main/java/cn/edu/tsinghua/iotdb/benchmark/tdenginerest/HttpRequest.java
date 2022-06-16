@@ -21,6 +21,7 @@ package cn.edu.tsinghua.iotdb.benchmark.tdenginerest;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -37,20 +38,25 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Base64;
 
 /** From https://www.cnblogs.com/zhuawang/archive/2012/12/08/2809380.html */
 public class HttpRequest {
   private static PoolingHttpClientConnectionManager cm;
   private static CloseableHttpClient httpClient = null;
   private static ThreadLocal<Long> requestId = null;
+  private static String usr;
+  private static String pwd;
 
-  public static void init() {
+  public static void init(String usrname, String passwd) {
     cm = new PoolingHttpClientConnectionManager();
     cm.setMaxTotal(1024);
     cm.setDefaultMaxPerRoute(1024);
     httpClient =
         HttpClients.custom().setConnectionManager(cm).setConnectionManagerShared(true).build();
     requestId = ThreadLocal.withInitial(() -> 0L);
+    usr = usrname;
+    pwd = passwd;
   }
 
   /**
@@ -75,10 +81,14 @@ public class HttpRequest {
       get.addHeader("X-Request-ID", reqId);
       response = httpClient.execute(get);
       Header[] headers = response.getHeaders("X-Request-ID");
-      if (!reqId.equals(headers[0].getValue())
+      if (headers != null && headers.length > 0 && !reqId.equals(headers[0].getValue())
           || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IOException("Bad HTTP response received");
+        throw new IOException("Bad HTTP response received. Code:" + response.getStatusLine().getStatusCode());
       }
+
+      String encoding = Base64.getEncoder().encodeToString((usr + ":" + pwd).getBytes());
+      get.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoding);
+
       HttpEntity entity = response.getEntity();
       /* // 获取所有响应头字段
       Map<String, List<String>> map = connection.getHeaderFields();
@@ -117,7 +127,6 @@ public class HttpRequest {
    * @return 所代表远程资源的响应结果
    */
   public static String sendPost(String url, String param) throws IOException {
-    PrintWriter out = null;
     BufferedReader in = null;
     String result = "";
     CloseableHttpResponse response = null;
@@ -125,15 +134,17 @@ public class HttpRequest {
     try {
       HttpPost post = new HttpPost(url);
       post.setEntity(new StringEntity(param, "UTF-8"));
-      Long id = requestId.get();
-      String reqId = Thread.currentThread().getName() + "-" + id;
-      requestId.set(id + 1);
-      post.addHeader("X-Request-ID", reqId);
+      //Long id = requestId.get();
+      //String reqId = Thread.currentThread().getName() + "-" + id;
+      //requestId.set(id + 1);
+      //post.addHeader("X-Request-ID", reqId);
+
+      String encoding = Base64.getEncoder().encodeToString((usr + ":" + pwd).getBytes());
+      post.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoding);
+
       response = httpClient.execute(post);
-      Header[] headers = response.getHeaders("X-Request-ID");
-      if (headers != null && headers.length > 0 && !reqId.equals(headers[0].getValue())
-          || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IOException("Bad HTTP response received");
+      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+        throw new IOException("Bad HTTP response received. code:" + response.getStatusLine().getStatusCode());
       }
       HttpEntity entity = response.getEntity();
       if (entity != null) {
