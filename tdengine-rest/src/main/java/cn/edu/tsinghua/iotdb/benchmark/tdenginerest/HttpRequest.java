@@ -83,7 +83,8 @@ public class HttpRequest {
       Header[] headers = response.getHeaders("X-Request-ID");
       if (headers != null && headers.length > 0 && !reqId.equals(headers[0].getValue())
           || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IOException("Bad HTTP response received. Code:" + response.getStatusLine().getStatusCode());
+        throw new IOException(
+            "Bad HTTP response received. Code:" + response.getStatusLine().getStatusCode());
       }
 
       String encoding = Base64.getEncoder().encodeToString((usr + ":" + pwd).getBytes());
@@ -134,17 +135,18 @@ public class HttpRequest {
     try {
       HttpPost post = new HttpPost(url);
       post.setEntity(new StringEntity(param, "UTF-8"));
-      //Long id = requestId.get();
-      //String reqId = Thread.currentThread().getName() + "-" + id;
-      //requestId.set(id + 1);
-      //post.addHeader("X-Request-ID", reqId);
+      // Long id = requestId.get();
+      // String reqId = Thread.currentThread().getName() + "-" + id;
+      // requestId.set(id + 1);
+      // post.addHeader("X-Request-ID", reqId);
 
       String encoding = Base64.getEncoder().encodeToString((usr + ":" + pwd).getBytes());
       post.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + encoding);
 
       response = httpClient.execute(post);
       if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IOException("Bad HTTP response received. code:" + response.getStatusLine().getStatusCode());
+        throw new IOException(
+            "Bad HTTP response received. code:" + response.getStatusLine().getStatusCode());
       }
       HttpEntity entity = response.getEntity();
       if (entity != null) {
