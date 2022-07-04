@@ -119,6 +119,7 @@ public class OpenTSDB implements IDatabase {
         writer = setupWriter();
       }
       writer.print(builder.toString());
+      writer.print("track " + Thread.currentThread().getName() + "\n");
       writer.flush();
       return new Status(true);
     } catch (Exception e) {
