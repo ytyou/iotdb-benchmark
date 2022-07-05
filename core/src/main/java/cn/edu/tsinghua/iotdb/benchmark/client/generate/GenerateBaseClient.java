@@ -20,6 +20,7 @@
 package cn.edu.tsinghua.iotdb.benchmark.client.generate;
 
 import cn.edu.tsinghua.iotdb.benchmark.client.Client;
+import cn.edu.tsinghua.iotdb.benchmark.client.operation.Operation;
 import cn.edu.tsinghua.iotdb.benchmark.schema.BaseDataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.schema.MetaUtil;
 import cn.edu.tsinghua.iotdb.benchmark.workload.SingletonWorkload;
@@ -49,6 +50,8 @@ public abstract class GenerateBaseClient extends Client implements Runnable {
   protected long loopIndex;
   /** Insert Loop Index, using for data insertion */
   protected long insertLoopIndex;
+  /** last operation */
+  protected Operation lastOperation;
 
   public GenerateBaseClient(
       int id,
@@ -72,7 +75,9 @@ public abstract class GenerateBaseClient extends Client implements Runnable {
       service.scheduleAtFixedRate(
           () -> {
             String percent = String.format("%.2f", (loopIndex + 1) * 100.0D / config.getLOOP());
-            LOGGER.info("{} {}% syntheticWorkload is done.", currentThread, percent);
+            LOGGER.info(
+                "{} {}% syntheticWorkload is done. {}, {}",
+                currentThread, percent, lastOperation, loopIndex);
           },
           1,
           config.getLOG_PRINT_INTERVAL(),

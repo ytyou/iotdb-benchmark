@@ -71,6 +71,7 @@ public class SyntheticClient extends GenerateBaseClient {
       long start = 0;
       for (loopIndex = 0; loopIndex < config.getLOOP(); loopIndex++) {
         Operation operation = operationController.getNextOperationType();
+        lastOperation = operation;
         if (config.getOP_INTERVAL() > 0) {
           start = System.currentTimeMillis();
         }
