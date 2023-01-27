@@ -48,7 +48,7 @@ public class TDengine implements IDatabase {
   private static final BaseDataSchema baseDataSchema = BaseDataSchema.getInstance();
 
   private static final String TAOS_DRIVER = "com.taosdata.jdbc.TSDBDriver";
-  private static final String URL_TAOS = "jdbc:TAOS://%s:%s";
+  private static final String URL_TAOS = "jdbc:TAOS://%s:%s/?timezone=UTC";
   private static final String CREATE_DATABASE = "create database if not exists %s";
   private static final String SUPER_TABLE = "super";
   private static final String USE_DB = "use %s";
