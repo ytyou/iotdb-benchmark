@@ -88,4 +88,8 @@ public class Constants {
       "cn.edu.tsinghua.iotdb.benchmark.victoriametrics.VictoriaMetrics";
   public static final String QUESTDB_CLASS = "cn.edu.tsinghua.iotdb.benchmark.questdb.QuestDB";
   public static final String SQLITE_CLASS = "cn.edu.tsinghua.iotdb.benchmark.sqlite.SqliteDB";
+  public static final String TICKTOCK_HTTP_WRITE_LINE_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockHttpWriteLine";
+  public static final String TICKTOCK_HTTP_PUT_PLAIN_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockHttpPutPlain";
 }

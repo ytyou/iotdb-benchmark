@@ -113,6 +113,12 @@ public class DBFactory {
         case DB_SQLITE:
           dbClass = Constants.SQLITE_CLASS;
           break;
+        case DB_TICKTOCK_HTTP_LINE:
+          dbClass = Constants.TICKTOCK_HTTP_WRITE_LINE_CLASS;
+          break;
+        case DB_TICKTOCK_HTTP_PLAIN:
+          dbClass = Constants.TICKTOCK_HTTP_PUT_PLAIN_CLASS;
+          break;
         default:
           throw new SQLException("didn't support this database");
       }
