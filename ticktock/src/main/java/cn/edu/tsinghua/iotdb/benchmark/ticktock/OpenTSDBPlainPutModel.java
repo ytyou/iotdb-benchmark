@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TickTockDataModel implements Serializable {
+public class OpenTSDBPlainPutModel implements Serializable {
   private static final long serialVersionUID = 1L;
   private String metric;
   private long timestamp;
