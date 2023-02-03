@@ -92,4 +92,8 @@ public class Constants {
       "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockHttpWriteLine";
   public static final String TICKTOCK_HTTP_PUT_PLAIN_CLASS =
       "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockHttpPutPlain";
+  public static final String TICKTOCK_TCP_WRITE_LINE_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockTcpWriteLine";
+  public static final String TICKTOCK_TCP_PUT_PLAIN_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockTcpPutPlain";
 }

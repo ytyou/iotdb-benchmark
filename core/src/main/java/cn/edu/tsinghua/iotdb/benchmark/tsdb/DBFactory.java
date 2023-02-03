@@ -119,6 +119,12 @@ public class DBFactory {
         case DB_TICKTOCK_HTTP_PLAIN:
           dbClass = Constants.TICKTOCK_HTTP_PUT_PLAIN_CLASS;
           break;
+        case DB_TICKTOCK_TCP_LINE:
+          dbClass = Constants.TICKTOCK_TCP_WRITE_LINE_CLASS;
+          break;
+        case DB_TICKTOCK_TCP_PLAIN:
+          dbClass = Constants.TICKTOCK_TCP_PUT_PLAIN_CLASS;
+          break;
         default:
           throw new SQLException("didn't support this database");
       }
