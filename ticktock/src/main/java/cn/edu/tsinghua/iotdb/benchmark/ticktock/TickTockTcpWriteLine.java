@@ -20,6 +20,7 @@ public class TickTockTcpWriteLine extends TickTockTcpPutPlain {
   /** constructor. */
   public TickTockTcpWriteLine(DBConfig dbConfig) {
     super(dbConfig);
+    LOGGER.info("Constructor of TickTockTcpWriteLine");
   }
 
   @Override

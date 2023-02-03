@@ -49,6 +49,7 @@ public class TickTockTcpPutPlain extends TickTockReadPlain implements IDatabase 
     writePort = Integer.parseInt(dbConfig.getPORT().get(1));
     threadLocalSocket = new ThreadLocal<>();
     threadLocalWriter = new ThreadLocal<>();
+    LOGGER.info("Constructor of TickTockTcpWriteLine. writeHost:" + writeHost + " port:" + writePort);
   }
 
   @Override
