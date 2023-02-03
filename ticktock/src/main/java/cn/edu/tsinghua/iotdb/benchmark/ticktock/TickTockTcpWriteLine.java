@@ -38,6 +38,7 @@ public class TickTockTcpWriteLine extends TickTockTcpPutPlain {
         writer = setupWriter();
       }
       writer.print(String.join("\n", lines));
+      writer.print("\n"); // make sure the last line also has a \n.
       writer.flush();
       return new Status(true);
     } catch (Exception e) {

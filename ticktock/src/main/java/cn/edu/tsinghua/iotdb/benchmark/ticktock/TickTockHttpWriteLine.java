@@ -53,7 +53,7 @@ public class TickTockHttpWriteLine extends TickTockHttpPutPlain implements IData
         lines.add(model2write(influxDBModel));
       }
 
-      HttpRequest.sendPost(writeUrl, String.join("\n", lines));
+      HttpRequest.sendPost(writeUrl, String.join("\n", lines) + "\n");
       return new Status(true);
     } catch (Exception e) {
       return new Status(false, 0, e, e.getMessage());

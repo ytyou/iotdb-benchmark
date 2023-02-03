@@ -46,8 +46,8 @@ public class HttpRequest {
 
   public static void init() {
     cm = new PoolingHttpClientConnectionManager();
-    cm.setMaxTotal(50);
-    cm.setDefaultMaxPerRoute(10);
+    cm.setMaxTotal(10000);
+    cm.setDefaultMaxPerRoute(10000);
     httpClient =
         HttpClients.custom().setConnectionManager(cm).setConnectionManagerShared(true).build();
     requestId = ThreadLocal.withInitial(() -> 0L);
