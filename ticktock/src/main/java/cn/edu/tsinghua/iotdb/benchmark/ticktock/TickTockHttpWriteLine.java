@@ -65,6 +65,11 @@ public class TickTockHttpWriteLine extends TickTockHttpPutPlain implements IData
     return insertOneBatch(batch);
   }
 
+  @Override
+  protected String getQuerySensorField() {
+    return "_field";
+  }
+
   static LinkedList<InfluxDBModel> createInfluxDBModelByBatch(Batch batch) {
     DeviceSchema deviceSchema = batch.getDeviceSchema();
     List<Record> records = batch.getRecords();

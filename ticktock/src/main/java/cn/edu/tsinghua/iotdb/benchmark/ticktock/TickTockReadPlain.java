@@ -291,12 +291,16 @@ public abstract class TickTockReadPlain implements IDatabase {
       for (int i = 1; i < config.getQUERY_SENSOR_NUM(); i++) {
         sensorStr += "|" + sensorList.get(i);
       }
-      tags.put("sensor", sensorStr);
+      tags.put(getQuerySensorField(), sensorStr);
       tags.put("device", deviceStr);
       subQuery.put("tags", tags);
       list.add(subQuery);
     }
     return list;
+  }
+
+  protected String getQuerySensorField() {
+      return "sensor";
   }
 
   protected String model2write(InfluxDBModel influxDBModel) {
