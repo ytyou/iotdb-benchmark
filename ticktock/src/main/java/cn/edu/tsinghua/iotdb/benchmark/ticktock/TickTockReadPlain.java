@@ -300,7 +300,7 @@ public abstract class TickTockReadPlain implements IDatabase {
   }
 
   protected String getQuerySensorField() {
-      return "sensor";
+    return "sensor";
   }
 
   protected String model2write(InfluxDBModel influxDBModel) {
