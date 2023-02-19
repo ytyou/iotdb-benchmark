@@ -429,7 +429,9 @@ public class ConfigDescriptor {
           DBConfig dbConfig = config.getDbConfig();
           DBConfig anotherConfig = config.getANOTHER_DBConfig();
           if (dbConfig.getDB_SWITCH() == DBSwitch.DB_INFLUX
-              || anotherConfig.getDB_SWITCH() == DBSwitch.DB_INFLUX) {
+              || dbConfig.getDB_SWITCH() == DBSwitch.DB_INFLUX_LINE
+              || anotherConfig.getDB_SWITCH() == DBSwitch.DB_INFLUX
+              || anotherConfig.getDB_SWITCH() == DBSwitch.DB_INFLUX_LINE) {
             LOGGER.error("Double write not support influxdb v1.x");
             result = false;
           }

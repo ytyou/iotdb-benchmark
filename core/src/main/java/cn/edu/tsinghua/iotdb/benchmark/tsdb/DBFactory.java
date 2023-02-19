@@ -83,6 +83,9 @@ public class DBFactory {
         case DB_INFLUX:
           dbClass = Constants.INFLUXDB_CLASS;
           break;
+        case DB_INFLUX_LINE:
+          dbClass = Constants.INFLUXDB_LINE_CLASS;
+          break;
         case DB_INFLUX_2:
           dbClass = Constants.INFLUXDB2_CLASS;
           break;

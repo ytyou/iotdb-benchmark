@@ -39,6 +39,7 @@ public enum DBSwitch {
   DB_IOT_09_SESSION(DBType.IoTDB, DBVersion.IOTDB_09, DBInsertMode.INSERT_USE_SESSION),
   DB_DOUBLE_IOT(DBType.DoubleIoTDB, null, null),
   DB_INFLUX(DBType.InfluxDB, null, null),
+  DB_INFLUX_LINE(DBType.InfluxDB, null, DBInsertMode.INFLUX_INSERT_USE_LINE),
   DB_INFLUX_2(DBType.InfluxDB, DBVersion.InfluxDB_2, null),
   DB_OPENTS(DBType.OpenTSDB, null, null),
   DB_CTS(DBType.CTSDB, null, null),
