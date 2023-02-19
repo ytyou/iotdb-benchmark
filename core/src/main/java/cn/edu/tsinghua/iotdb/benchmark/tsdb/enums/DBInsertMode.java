@@ -33,7 +33,6 @@ public enum DBInsertMode {
   TICKTOCK_INSERT_USE_TCP_PLAIN("TCP_PLAIN"), // TickTock uses Tcp and opentsdb plain put protocol.
   INFLUX_INSERT_USE_LINE("LINE"); // InfluxDB v1 uses line protocol for write.
 
-
   String insertType;
 
   DBInsertMode(String insertType) {
