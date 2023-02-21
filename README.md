@@ -1,3 +1,19 @@
+# 0. This repo addes a few new features on top of the original thulab/iot-benchmark repo.
+
+1. Support a new TSDB, [TickTockDB](http://www.github.com/ytyou/ticktock). A few ```DB_SWITCH``` options are added for TickTockDB to differentate how to send write operations. Note that all reads are HTTP requests. Please refer to [InfluxDB line protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/) and [Opentsdb plain put protocol](http://opentsdb.net/docs/build/html/user_guide/writing/index.html#telnet)
+
+1.1. ```TickTock-HTTP_LINE```: Use HTTP and Influxdb line protocol for write operations.
+
+1.2. ```TickTock-HTTP_PLAIN```: Use HTTP and Opentsdb plain put protocol for write operations. 
+
+1.3. ```TickTock-TCP_LINE```: Use TCP and Influxdb line protocol for write operations.
+
+1.4. ```TickTock-TCP_PLAIN```: Use TCP and Opentsdb plain put protocol for write operations. 
+
+2. Support line write protocol in InfluxDB v1. Add a new DB_SWTICH:
+
+2.1. ```InfluxDB-LINE```: Use [line write protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/) instead of v1 batch writes.
+
 # 1. IoTDB-Benchmark
 ![](https://img.shields.io/badge/platform-MacOS%20%7C%20Linux-yellow.svg)
 ![](https://img.shields.io/badge/java--language-1.8-blue.svg)
@@ -28,6 +44,7 @@ Databases currently supported:
 |       KairosDB       |    --    |                       Http Request                       |
 |     TimescaleDB      |    --    |                           jdbc                           |
 |        TDengine        |    2.2.0.2    |                           jdbc                           |
+|       TickTockDB     |   --     |    Http Request               |
 
 # 4. Main Features
 
