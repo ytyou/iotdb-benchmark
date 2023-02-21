@@ -12,7 +12,7 @@
 
 2. Support line write protocol in InfluxDB v1. Add a new DB_SWTICH:
 
-2.1. ```InfluxDB-LINE```: Use [line write protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/) instead of v1 batch writes.
+2.1. ```InfluxDB-LINE```: Use v2 [line write protocol](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/) for Influxdb V1 instead of v1 batch writes APIs.
 
 # 1. IoTDB-Benchmark
 ![](https://img.shields.io/badge/platform-MacOS%20%7C%20Linux-yellow.svg)
