@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package cn.edu.tsinghua.iotdb.benchmark.opentsdb;
+package cn.edu.tsinghua.iotdb.benchmark.ticktock;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -46,8 +46,8 @@ public class HttpRequest {
 
   public static void init() {
     cm = new PoolingHttpClientConnectionManager();
-    cm.setMaxTotal(1024);
-    cm.setDefaultMaxPerRoute(1024);
+    cm.setMaxTotal(10000);
+    cm.setDefaultMaxPerRoute(10000);
     httpClient =
         HttpClients.custom().setConnectionManager(cm).setConnectionManagerShared(true).build();
     requestId = ThreadLocal.withInitial(() -> 0L);

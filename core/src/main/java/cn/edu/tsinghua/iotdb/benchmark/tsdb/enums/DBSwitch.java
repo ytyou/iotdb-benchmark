@@ -39,6 +39,7 @@ public enum DBSwitch {
   DB_IOT_09_SESSION(DBType.IoTDB, DBVersion.IOTDB_09, DBInsertMode.INSERT_USE_SESSION),
   DB_DOUBLE_IOT(DBType.DoubleIoTDB, null, null),
   DB_INFLUX(DBType.InfluxDB, null, null),
+  DB_INFLUX_LINE(DBType.InfluxDB, null, DBInsertMode.INFLUX_INSERT_USE_LINE),
   DB_INFLUX_2(DBType.InfluxDB, DBVersion.InfluxDB_2, null),
   DB_OPENTS(DBType.OpenTSDB, null, null),
   DB_CTS(DBType.CTSDB, null, null),
@@ -49,7 +50,11 @@ public enum DBSwitch {
   DB_QUESTDB(DBType.QuestDB, null, null),
   DB_MSSQLSERVER(DBType.MSSQLSERVER, null, null),
   DB_VICTORIAMETRICS(DBType.VictoriaMetrics, null, null),
-  DB_SQLITE(DBType.SQLite, null, null);
+  DB_SQLITE(DBType.SQLite, null, null),
+  DB_TICKTOCK_HTTP_LINE(DBType.TickTock, null, DBInsertMode.TICKTOCK_INSERT_USE_HTTP_LINE),
+  DB_TICKTOCK_HTTP_PLAIN(DBType.TickTock, null, DBInsertMode.TICKTOCK_INSERT_USE_HTTP_PLAIN),
+  DB_TICKTOCK_TCP_LINE(DBType.TickTock, null, DBInsertMode.TICKTOCK_INSERT_USE_TCP_LINE),
+  DB_TICKTOCK_TCP_PLAIN(DBType.TickTock, null, DBInsertMode.TICKTOCK_INSERT_USE_TCP_PLAIN);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DBSwitch.class);
   DBType type;

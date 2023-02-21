@@ -25,7 +25,13 @@ public enum DBInsertMode {
   INSERT_USE_SESSION_TABLET("SESSION_BY_TABLET"),
   INSERT_USE_SESSION_RECORD("SESSION_BY_RECORD"),
   INSERT_USE_SESSION_RECORDS("SESSION_BY_RECORDS"),
-  INSERT_USE_SESSION_POOL("SESSION_POOL");
+  INSERT_USE_SESSION_POOL("SESSION_POOL"),
+  TICKTOCK_INSERT_USE_HTTP_LINE("HTTP_LINE"), // TickTock uses Http and influxdb line protocol.
+  TICKTOCK_INSERT_USE_HTTP_PLAIN(
+      "HTTP_PLAIN"), // TickTock uses Http and opentsdb plain put protocol.
+  TICKTOCK_INSERT_USE_TCP_LINE("TCP_LINE"), // TickTock uses Tcp and influxdb line protocol.
+  TICKTOCK_INSERT_USE_TCP_PLAIN("TCP_PLAIN"), // TickTock uses Tcp and opentsdb plain put protocol.
+  INFLUX_INSERT_USE_LINE("LINE"); // InfluxDB v1 uses line protocol for write.
 
   String insertType;
 

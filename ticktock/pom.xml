@@ -10,8 +10,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>opentsdb</artifactId>
-    <name>Benchmark opentsdb</name>
+    <artifactId>ticktock</artifactId>
+    <name>Benchmark ticktock</name>
 
     <dependencies>
         <dependency>

@@ -17,13 +17,13 @@
  * under the License.
  */
 
-package cn.edu.tsinghua.iotdb.benchmark.opentsdb;
+package cn.edu.tsinghua.iotdb.benchmark.ticktock;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OpenTSDBDataModel implements Serializable {
+public class OpenTSDBPlainPutModel implements Serializable {
   private static final long serialVersionUID = 1L;
   private String metric;
   private long timestamp;

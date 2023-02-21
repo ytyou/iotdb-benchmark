@@ -47,14 +47,14 @@ import java.util.concurrent.TimeUnit;
 public class InfluxDB implements IDatabase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(InfluxDB.class);
-  private static Config config = ConfigDescriptor.getInstance().getConfig();
+  protected static Config config = ConfigDescriptor.getInstance().getConfig();
 
-  private final String influxUrl;
-  private final String influxDbName;
-  private final String defaultRp = "autogen";
+  protected final String influxUrl;
+  protected final String influxDbName;
+  protected final String defaultRp = "autogen";
 
   private org.influxdb.InfluxDB influxDbInstance;
-  private static final long TIMESTAMP_TO_NANO = getToNanoConst(config.getTIMESTAMP_PRECISION());
+  protected static final long TIMESTAMP_TO_NANO = getToNanoConst(config.getTIMESTAMP_PRECISION());
 
   /** constructor. */
   public InfluxDB(DBConfig dbConfig) {

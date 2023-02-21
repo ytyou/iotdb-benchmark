@@ -74,6 +74,8 @@ public class Constants {
   public static final String IOTDB009_SESSION_CLASS =
       "cn.edu.tsinghua.iotdb.benchmark.iotdb009.IoTDBSession";
   public static final String INFLUXDB_CLASS = "cn.edu.tsinghua.iotdb.benchmark.influxdb.InfluxDB";
+  public static final String INFLUXDB_LINE_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.influxdb.InfluxDBLine";
   public static final String INFLUXDB2_CLASS = "cn.edu.tsinghua.iotdb.benchmark.influxdb2.InfluxDB";
 
   public static final String FAKEDB_CLASS = "cn.edu.tsinghua.iotdb.benchmark.tsdb.fakedb.FakeDB";
@@ -88,4 +90,12 @@ public class Constants {
       "cn.edu.tsinghua.iotdb.benchmark.victoriametrics.VictoriaMetrics";
   public static final String QUESTDB_CLASS = "cn.edu.tsinghua.iotdb.benchmark.questdb.QuestDB";
   public static final String SQLITE_CLASS = "cn.edu.tsinghua.iotdb.benchmark.sqlite.SqliteDB";
+  public static final String TICKTOCK_HTTP_WRITE_LINE_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockHttpWriteLine";
+  public static final String TICKTOCK_HTTP_PUT_PLAIN_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockHttpPutPlain";
+  public static final String TICKTOCK_TCP_WRITE_LINE_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockTcpWriteLine";
+  public static final String TICKTOCK_TCP_PUT_PLAIN_CLASS =
+      "cn.edu.tsinghua.iotdb.benchmark.ticktock.TickTockTcpPutPlain";
 }

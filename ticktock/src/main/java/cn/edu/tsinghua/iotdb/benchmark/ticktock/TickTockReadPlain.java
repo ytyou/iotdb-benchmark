@@ -1,3 +1,5 @@
+package cn.edu.tsinghua.iotdb.benchmark.ticktock;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,44 +18,52 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package cn.edu.tsinghua.iotdb.benchmark.opentsdb;
-
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
+import cn.edu.tsinghua.iotdb.benchmark.schema.BaseDataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.schema.DeviceSchema;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBConfig;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.IDatabase;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.TsdbException;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Batch;
 import cn.edu.tsinghua.iotdb.benchmark.workload.ingestion.Record;
-import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.*;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggRangeValueQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.AggValueQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.GroupByQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.LatestPointQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.PreciseQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.RangeQuery;
+import cn.edu.tsinghua.iotdb.benchmark.workload.query.impl.ValueRangeQuery;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
-public class OpenTSDB implements IDatabase {
+public abstract class TickTockReadPlain implements IDatabase {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(OpenTSDB.class);
-  private static final Config config = ConfigDescriptor.getInstance().getConfig();
-  private final String queryUrl;
-  private final String writeUrl;
-  private final Random sensorRandom;
-  private final Map<String, LinkedList<OpenTSDBDataModel>> dataMap = new HashMap<>();
-  private final int backScanTime = 24;
+  private static final Logger LOGGER = LoggerFactory.getLogger(TickTockHttpPutPlain.class);
+  protected static final Config config = ConfigDescriptor.getInstance().getConfig();
+  private static final BaseDataSchema baseDataSchema = BaseDataSchema.getInstance();
+
+  protected final String queryUrl;
+  protected final Random sensorRandom;
 
   /** constructor. */
-  public OpenTSDB(DBConfig dbConfig) {
+  public TickTockReadPlain(DBConfig dbConfig) {
     sensorRandom = new Random(1 + config.getQUERY_SEED());
     queryUrl =
         "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/query";
-    writeUrl = "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/put";
   }
 
   @Override
@@ -67,40 +77,6 @@ public class OpenTSDB implements IDatabase {
   // no need for opentsdb
   @Override
   public void registerSchema(List<DeviceSchema> schemaList) throws TsdbException {}
-
-  @Override
-  public Status insertOneBatch(Batch batch) {
-    try {
-      // create dataModel
-      LinkedList<OpenTSDBDataModel> models = createDataModelByBatch(batch);
-      StringBuilder builder = new StringBuilder();
-      for (OpenTSDBDataModel model : models) {
-        model.toLines(builder);
-      }
-      HttpRequest.sendPost(writeUrl, builder.toString());
-      return new Status(true);
-    } catch (Exception e) {
-      e.printStackTrace();
-      return new Status(false, 0, e, e.toString());
-    }
-  }
-
-  @Override
-  public Status insertOneSensorBatch(Batch batch) {
-    try {
-      // create dataModel
-      LinkedList<OpenTSDBDataModel> models = createDataModelByBatch(batch);
-      StringBuilder builder = new StringBuilder();
-      for (OpenTSDBDataModel model : models) {
-        model.toLines(builder);
-      }
-      HttpRequest.sendPost(writeUrl, builder.toString());
-      return new Status(true);
-    } catch (Exception e) {
-      e.printStackTrace();
-      return new Status(false, 0, e, e.toString());
-    }
-  }
 
   @Override
   public Status preciseQuery(PreciseQuery preciseQuery) {
@@ -212,20 +188,21 @@ public class OpenTSDB implements IDatabase {
     }
   }
 
-  private LinkedList<OpenTSDBDataModel> createDataModelByBatch(Batch batch) throws TsdbException {
+  protected LinkedList<OpenTSDBPlainPutModel> createOpenTSDBDataModelByBatch(Batch batch)
+      throws TsdbException {
     DeviceSchema deviceSchema = batch.getDeviceSchema();
     String device = deviceSchema.getDevice();
     List<Record> records = batch.getRecords();
     List<String> sensors = deviceSchema.getSensors();
     int sensorNum = sensors.size();
     int recordNum = records.size();
-    LinkedList<OpenTSDBDataModel> models = new LinkedList<>();
+    LinkedList<OpenTSDBPlainPutModel> models = new LinkedList<>();
 
     for (int i = 0; i < recordNum; i++) {
       Record record = records.get(i);
       if (batch.getColIndex() != -1) {
         // 只插入一列
-        OpenTSDBDataModel model = new OpenTSDBDataModel();
+        OpenTSDBPlainPutModel model = new OpenTSDBPlainPutModel();
         model.setMetric(deviceSchema.getGroup());
         model.setTimestamp(record.getTimestamp());
         model.setValue(record.getRecordDataValue().get(0));
@@ -237,7 +214,7 @@ public class OpenTSDB implements IDatabase {
       } else {
         // 插入对齐数据
         for (int j = 0; j < sensorNum; j++) {
-          OpenTSDBDataModel model = new OpenTSDBDataModel();
+          OpenTSDBPlainPutModel model = new OpenTSDBPlainPutModel();
           model.setMetric(deviceSchema.getGroup());
           model.setTimestamp(record.getTimestamp());
           model.setValue(record.getRecordDataValue().get(j));
@@ -314,11 +291,70 @@ public class OpenTSDB implements IDatabase {
       for (int i = 1; i < config.getQUERY_SENSOR_NUM(); i++) {
         sensorStr += "|" + sensorList.get(i);
       }
-      tags.put("sensor", sensorStr);
+      tags.put(getQuerySensorField(), sensorStr);
       tags.put("device", deviceStr);
       subQuery.put("tags", tags);
       list.add(subQuery);
     }
     return list;
+  }
+
+  protected String getQuerySensorField() {
+    return "sensor";
+  }
+
+  protected String model2write(InfluxDBModel influxDBModel) {
+    StringBuffer result = new StringBuffer(influxDBModel.getMetric());
+    if (influxDBModel.getTags() != null) {
+      for (Map.Entry<String, String> pair : influxDBModel.getTags().entrySet()) {
+        result.append(",");
+        result.append(pair.getKey());
+        result.append("=");
+        result.append(pair.getValue());
+      }
+    }
+    result.append(" ");
+    if (influxDBModel.getFields() != null) {
+      boolean first = true;
+      for (Map.Entry<String, Object> pair : influxDBModel.getFields().entrySet()) {
+        if (first) {
+          first = false;
+        } else {
+          result.append(",");
+        }
+        result.append(pair.getKey());
+        result.append("=");
+        // get value
+        String type =
+            typeMap(
+                baseDataSchema.getSensorType(influxDBModel.getTags().get("device"), pair.getKey()));
+        switch (type) {
+          case "BOOLEAN":
+            result.append(((boolean) pair.getValue()) ? "true" : "false");
+            break;
+          case "INT32":
+            result.append((int) pair.getValue());
+            break;
+          case "INT64":
+            result.append((long) pair.getValue());
+            break;
+          case "FLOAT":
+            result.append((float) pair.getValue());
+            break;
+          case "DOUBLE":
+            result.append((double) pair.getValue());
+            break;
+          case "TEXT":
+            result.append("\"").append(pair.getValue()).append("\"");
+            break;
+          default:
+            LOGGER.error("Unsupported data type {}, use default data type: BINARY.", type);
+            return "TEXT";
+        }
+      }
+    }
+    result.append(" ");
+    result.append(influxDBModel.getTimestamp());
+    return result.toString();
   }
 }

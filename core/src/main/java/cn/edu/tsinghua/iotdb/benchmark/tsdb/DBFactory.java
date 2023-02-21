@@ -83,6 +83,9 @@ public class DBFactory {
         case DB_INFLUX:
           dbClass = Constants.INFLUXDB_CLASS;
           break;
+        case DB_INFLUX_LINE:
+          dbClass = Constants.INFLUXDB_LINE_CLASS;
+          break;
         case DB_INFLUX_2:
           dbClass = Constants.INFLUXDB2_CLASS;
           break;
@@ -112,6 +115,18 @@ public class DBFactory {
           break;
         case DB_SQLITE:
           dbClass = Constants.SQLITE_CLASS;
+          break;
+        case DB_TICKTOCK_HTTP_LINE:
+          dbClass = Constants.TICKTOCK_HTTP_WRITE_LINE_CLASS;
+          break;
+        case DB_TICKTOCK_HTTP_PLAIN:
+          dbClass = Constants.TICKTOCK_HTTP_PUT_PLAIN_CLASS;
+          break;
+        case DB_TICKTOCK_TCP_LINE:
+          dbClass = Constants.TICKTOCK_TCP_WRITE_LINE_CLASS;
+          break;
+        case DB_TICKTOCK_TCP_PLAIN:
+          dbClass = Constants.TICKTOCK_TCP_PUT_PLAIN_CLASS;
           break;
         default:
           throw new SQLException("didn't support this database");
