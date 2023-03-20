@@ -41,7 +41,7 @@ public class TickTockHttpWriteLine extends TickTockHttpPutPlain implements IData
     super(dbConfig);
 
     writeUrl =
-        "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/write";
+        "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(1) + "/api/write";
   }
 
   @Override
