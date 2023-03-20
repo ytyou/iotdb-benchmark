@@ -36,7 +36,7 @@ public class TickTockHttpPutPlain extends TickTockReadPlain implements IDatabase
   /** constructor. */
   public TickTockHttpPutPlain(DBConfig dbConfig) {
     super(dbConfig);
-    writeUrl = "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/put";
+    writeUrl = "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(1) + "/api/put";
   }
 
   @Override
