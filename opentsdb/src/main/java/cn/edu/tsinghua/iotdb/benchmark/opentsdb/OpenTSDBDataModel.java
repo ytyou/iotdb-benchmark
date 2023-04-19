@@ -61,20 +61,4 @@ public class OpenTSDBDataModel implements Serializable {
   public void setTags(Map<String, String> tags) {
     this.tags = tags;
   }
-
-  public void toLines(StringBuilder builder) {
-    builder.append("put ");
-    builder.append(metric);
-    builder.append(" ");
-    builder.append(Long.toString(timestamp));
-    builder.append(" ");
-    builder.append(value.toString());
-    for (Map.Entry<String, String> entry : tags.entrySet()) {
-      builder.append(" ");
-      builder.append(entry.getKey());
-      builder.append("=");
-      builder.append(entry.getValue());
-    }
-    builder.append("\n");
-  }
 }
