@@ -21,6 +21,7 @@ package cn.edu.tsinghua.iotdb.benchmark.opentsdb;
 
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
+import cn.edu.tsinghua.iotdb.benchmark.conf.Constants;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.schema.DeviceSchema;
 import cn.edu.tsinghua.iotdb.benchmark.tsdb.DBConfig;
@@ -35,7 +36,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.*;
+import java.io.IOException;
 import java.util.*;
 
 public class OpenTSDB implements IDatabase {
@@ -51,18 +52,35 @@ public class OpenTSDB implements IDatabase {
   /** constructor. */
   public OpenTSDB(DBConfig dbConfig) {
     sensorRandom = new Random(1 + config.getQUERY_SEED());
-    queryUrl =
-        "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/query";
-    writeUrl = "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/put";
+    String openUrl = dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0);
+    writeUrl = openUrl + "/api/put?summary ";
+    queryUrl = openUrl + "/api/query";
   }
 
   @Override
-  public void init() throws TsdbException {
-    HttpRequest.init();
-  }
+  public void init() throws TsdbException {}
 
   @Override
-  public void cleanup() throws TsdbException {}
+  public void cleanup() throws TsdbException {
+    // example JDBC_URL:
+    // http://host:4242/api/query?start=2016/02/16-00:00:00&end=2016/02/17-23:59:59&m=avg:1ms-avg:metricname
+    for (int i = 0; i < config.getGROUP_NUMBER(); i++) {
+      String metric = "";
+      String metricName = metric + "group_" + i;
+      String DELETE_METRIC_URL = "%s?start=%s&m=sum:1ms-sum:%s";
+      String deleteMetricURL =
+          String.format(DELETE_METRIC_URL, queryUrl, Constants.START_TIMESTAMP, metricName);
+      String response;
+      try {
+        response = HttpRequest.sendDelete(deleteMetricURL, "");
+        LOGGER.info("Delete old data of {} ...", metricName);
+        LOGGER.debug("Delete request response: {}", response);
+      } catch (IOException e) {
+        LOGGER.error("Delete old OpenTSDB metric {} failed. Error: {}", metricName, e.getMessage());
+        throw new TsdbException(e);
+      }
+    }
+  }
 
   // no need for opentsdb
   @Override
@@ -73,11 +91,8 @@ public class OpenTSDB implements IDatabase {
     try {
       // create dataModel
       LinkedList<OpenTSDBDataModel> models = createDataModelByBatch(batch);
-      StringBuilder builder = new StringBuilder();
-      for (OpenTSDBDataModel model : models) {
-        model.toLines(builder);
-      }
-      HttpRequest.sendPost(writeUrl, builder.toString());
+      String sql = JSON.toJSONString(models);
+      HttpRequest.sendPost(writeUrl, sql);
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -90,11 +105,8 @@ public class OpenTSDB implements IDatabase {
     try {
       // create dataModel
       LinkedList<OpenTSDBDataModel> models = createDataModelByBatch(batch);
-      StringBuilder builder = new StringBuilder();
-      for (OpenTSDBDataModel model : models) {
-        model.toLines(builder);
-      }
-      HttpRequest.sendPost(writeUrl, builder.toString());
+      String sql = JSON.toJSONString(models);
+      HttpRequest.sendPost(writeUrl, sql);
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -141,10 +153,7 @@ public class OpenTSDB implements IDatabase {
     queryMap.put("msResolution", true);
     queryMap.put("start", aggRangeQuery.getStartTimestamp() - 1);
     queryMap.put("end", aggRangeQuery.getEndTimestamp() + 1);
-    list = getSubQueries(aggRangeQuery.getDeviceSchema(), "none");
-    for (Map<String, Object> subQuery : list) {
-      subQuery.put("downsample", "0all-" + aggRangeQuery.getAggFun());
-    }
+    list = getSubQueries(aggRangeQuery.getDeviceSchema(), aggRangeQuery.getAggFun());
     queryMap.put("queries", list);
     String sql = JSON.toJSONString(queryMap);
     return executeQueryAndGetStatus(sql, false);
@@ -205,12 +214,7 @@ public class OpenTSDB implements IDatabase {
   }
 
   @Override
-  public void close() {
-    try {
-      HttpRequest.close();
-    } catch (Exception e) {
-    }
-  }
+  public void close() {}
 
   private LinkedList<OpenTSDBDataModel> createDataModelByBatch(Batch batch) throws TsdbException {
     DeviceSchema deviceSchema = batch.getDeviceSchema();
