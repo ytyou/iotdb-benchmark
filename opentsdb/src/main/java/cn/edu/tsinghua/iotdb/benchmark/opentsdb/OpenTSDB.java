@@ -52,13 +52,15 @@ public class OpenTSDB implements IDatabase {
   /** constructor. */
   public OpenTSDB(DBConfig dbConfig) {
     sensorRandom = new Random(1 + config.getQUERY_SEED());
-    String openUrl = dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0);
-    writeUrl = openUrl + "/api/put?summary ";
+    String openUrl = "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0);
+    writeUrl = openUrl + "/api/put";
     queryUrl = openUrl + "/api/query";
   }
 
   @Override
-  public void init() throws TsdbException {}
+  public void init() throws TsdbException {
+    HttpRequest.init();
+  }
 
   @Override
   public void cleanup() throws TsdbException {
