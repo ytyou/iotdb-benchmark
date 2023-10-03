@@ -68,6 +68,7 @@ public class SyntheticClient extends GenerateBaseClient {
   @Override
   protected void doOperations(int actualDeviceFloor) {
     if (!config.isIS_POINT_COMPARISON()) {
+      long overtimeMs = 0;
       long start = 0;
       for (loopIndex = 0; loopIndex < config.getLOOP(); loopIndex++) {
         Operation operation = operationController.getNextOperationType();
@@ -176,11 +177,29 @@ public class SyntheticClient extends GenerateBaseClient {
         }
         if (config.getOP_INTERVAL() > 0) {
           long elapsed = System.currentTimeMillis() - start;
-          if (elapsed < config.getOP_INTERVAL()) {
-            try {
-              Thread.sleep(config.getOP_INTERVAL() - elapsed);
-            } catch (InterruptedException e) {
-              LOGGER.error("Wait for next operation failed because ", e);
+          long currOvertimeMs = elapsed - config.getOP_INTERVAL();
+          if (currOvertimeMs >= 0) {
+            // If the current loop took longer than OP_INTERVAL, don't sleep and record how many milliseconds overtime in total.
+            overtimeMs += currOvertimeMs;
+          } else {
+            // If the current loop returns earlier than OP_INTERVAL
+            if (overtimeMs > 0) {
+              // If the test ran behind schedule, the current loop just catched up with the schedule by currOvertimeMs (note it is negative).
+              overtimeMs += currOvertimeMs;
+            }
+
+            if (overtimeMs < 0) {
+              overtimeMs = 0;
+            }
+
+            // If the test still runs behind schedule, don't sleep.
+            // Sleep only if no more overtime.
+            if (overtimeMs == 0) {
+              try {
+                Thread.sleep(0 - currOvertimeMs);
+              } catch (InterruptedException e) {
+                LOGGER.error("Wait for next operation failed because ", e);
+              }
             }
           }
         }
