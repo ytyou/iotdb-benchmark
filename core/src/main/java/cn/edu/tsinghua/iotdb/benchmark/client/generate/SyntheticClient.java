@@ -176,15 +176,20 @@ public class SyntheticClient extends GenerateBaseClient {
           }
         }
         if (config.getOP_INTERVAL() > 0) {
+          String threadName = Thread.currentThread().getName();
           long elapsed = System.currentTimeMillis() - start;
           long currOvertimeMs = elapsed - config.getOP_INTERVAL();
           if (currOvertimeMs >= 0) {
-            // If the current loop took longer than OP_INTERVAL, don't sleep and record how many milliseconds overtime in total.
+            // If the current loop took longer than OP_INTERVAL, don't sleep and record how many
+            // milliseconds overtime in total.
             overtimeMs += currOvertimeMs;
+            // LOGGER.info(
+            //    "{} Skip sleep since behind schedule. OvertimeMs={}", threadName, overtimeMs);
           } else {
             // If the current loop returns earlier than OP_INTERVAL
             if (overtimeMs > 0) {
-              // If the test ran behind schedule, the current loop just catched up with the schedule by currOvertimeMs (note it is negative).
+              // If the test ran behind schedule, the current loop just catched up with the schedule
+              // by currOvertimeMs (note it is negative).
               overtimeMs += currOvertimeMs;
             }
 
@@ -196,10 +201,16 @@ public class SyntheticClient extends GenerateBaseClient {
             // Sleep only if no more overtime.
             if (overtimeMs == 0) {
               try {
+                // LOGGER.info("{} Sleep {} ms", threadName, (0 - currOvertimeMs));
                 Thread.sleep(0 - currOvertimeMs);
               } catch (InterruptedException e) {
                 LOGGER.error("Wait for next operation failed because ", e);
               }
+            } else if (loopIndex % 100 == 0) {
+              LOGGER.info(
+                  "{} Still behind schedule, skip sleep. OvertimeMs is reduced to {}",
+                  threadName,
+                  overtimeMs);
             }
           }
         }
