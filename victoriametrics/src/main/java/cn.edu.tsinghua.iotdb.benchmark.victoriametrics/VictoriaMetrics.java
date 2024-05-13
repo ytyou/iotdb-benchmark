@@ -68,7 +68,7 @@ public class VictoriaMetrics implements IDatabase {
    */
   @Override
   public void init() throws TsdbException {
-    // no need to init
+    HttpRequest.init();
   }
 
   /**
