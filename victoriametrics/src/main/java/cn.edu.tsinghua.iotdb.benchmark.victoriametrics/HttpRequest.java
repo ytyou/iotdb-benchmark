@@ -19,9 +19,7 @@
 
 package cn.edu.tsinghua.iotdb.benchmark.victoriametrics;
 
-import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -69,16 +67,7 @@ public class HttpRequest {
       String urlNameString = url;
       if (param != null) urlNameString = urlNameString + "?" + param;
       HttpGet get = new HttpGet(urlNameString);
-      Long id = requestId.get();
-      String reqId = Thread.currentThread().getName() + "-" + id;
-      requestId.set(id + 1);
-      get.addHeader("X-Request-ID", reqId);
       response = httpClient.execute(get);
-      Header[] headers = response.getHeaders("X-Request-ID");
-      if (!reqId.equals(headers[0].getValue())
-          || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IOException("Bad HTTP response received");
-      }
       HttpEntity entity = response.getEntity();
       /* // 获取所有响应头字段
       Map<String, List<String>> map = connection.getHeaderFields();
@@ -128,14 +117,8 @@ public class HttpRequest {
       Long id = requestId.get();
       String reqId = Thread.currentThread().getName() + "-" + id;
       requestId.set(id + 1);
-      post.addHeader("X-Request-ID", reqId);
       post.addHeader("Content-Type", contentType);
       response = httpClient.execute(post);
-      Header[] headers = response.getHeaders("X-Request-ID");
-      if (!reqId.equals(headers[0].getValue())
-          || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-        throw new IOException("Bad HTTP response received");
-      }
       HttpEntity entity = response.getEntity();
       if (entity != null) {
         // 定义BufferedReader输入流来读取URL的响应
