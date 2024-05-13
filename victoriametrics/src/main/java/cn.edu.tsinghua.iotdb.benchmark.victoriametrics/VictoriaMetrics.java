@@ -118,8 +118,7 @@ public class VictoriaMetrics implements IDatabase {
       for (VictoriaMetricsModel victoriaMetricsModel : models) {
         body.append(victoriaMetricsModel.toString() + "\n");
       }
-      HttpRequestUtil.sendPost(
-          CREATE_URL, body.toString(), "text/plain; version=0.0.4; charset=utf-8");
+      HttpRequest.sendPost(CREATE_URL, body.toString(), "text/plain; version=0.0.4; charset=utf-8");
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
@@ -143,8 +142,7 @@ public class VictoriaMetrics implements IDatabase {
       for (VictoriaMetricsModel victoriaMetricsModel : models) {
         body.append(victoriaMetricsModel.toString() + "\n");
       }
-      HttpRequestUtil.sendPost(
-          CREATE_URL, body.toString(), "text/plain; version=0.0.4; charset=utf-8");
+      HttpRequest.sendPost(CREATE_URL, body.toString(), "text/plain; version=0.0.4; charset=utf-8");
       return new Status(true);
     } catch (Exception e) {
       e.printStackTrace();
