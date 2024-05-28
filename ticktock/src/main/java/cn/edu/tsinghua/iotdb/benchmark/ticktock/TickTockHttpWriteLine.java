@@ -40,8 +40,12 @@ public class TickTockHttpWriteLine extends TickTockHttpPutPlain implements IData
   public TickTockHttpWriteLine(DBConfig dbConfig) {
     super(dbConfig);
 
-    writeUrl =
-        "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(1) + "/api/write";
+    if (writePort.equals("8428")) {
+      // It is for VictoriaMetrics API.
+      writeUrl = "http://" + host + ":" + writePort + "/write";
+    } else {
+      writeUrl = "http://" + host + ":" + writePort + "/api/write";
+    }
   }
 
   @Override

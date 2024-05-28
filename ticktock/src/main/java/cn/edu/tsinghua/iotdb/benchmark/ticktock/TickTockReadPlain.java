@@ -59,11 +59,22 @@ public abstract class TickTockReadPlain implements IDatabase {
   protected final String queryUrl;
   protected final Random sensorRandom;
 
+  protected String host = null;
+  protected String writePort;
+  protected String readPort;
+
   /** constructor. */
   public TickTockReadPlain(DBConfig dbConfig) {
     sensorRandom = new Random(1 + config.getQUERY_SEED());
-    queryUrl =
-        "http://" + dbConfig.getHOST().get(0) + ":" + dbConfig.getPORT().get(0) + "/api/query";
+
+    host = dbConfig.getHOST().get(0);
+    // TT ports format: port1[|port2], e.g., 6182|6183, or 6182
+    String[] portArray = dbConfig.getPORT().get(0).split("|");
+
+    readPort = portArray[0];
+    writePort = portArray.length > 1 ? portArray[1] : portArray[0];
+
+    queryUrl = "http://" + host + ":" + readPort + "/api/query";
   }
 
   @Override

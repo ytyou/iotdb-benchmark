@@ -37,20 +37,15 @@ import java.util.LinkedList;
 public class TickTockTcpPutPlain extends TickTockReadPlain implements IDatabase {
   private static final Logger LOGGER = LoggerFactory.getLogger(TickTockTcpPutPlain.class);
 
-  protected String writeHost = null;
-  protected int writePort;
   protected ThreadLocal<Socket> threadLocalSocket = null;
   protected ThreadLocal<PrintWriter> threadLocalWriter = null;
 
   /** constructor. */
   public TickTockTcpPutPlain(DBConfig dbConfig) {
     super(dbConfig);
-    writeHost = dbConfig.getHOST().get(0);
-    writePort = Integer.parseInt(dbConfig.getPORT().get(1));
     threadLocalSocket = new ThreadLocal<>();
     threadLocalWriter = new ThreadLocal<>();
-    LOGGER.info(
-        "Constructor of TickTockTcpWriteLine. writeHost:" + writeHost + " port:" + writePort);
+    LOGGER.info("Constructor of TickTockTcpWriteLine. writeHost:" + host + " port:" + writePort);
   }
 
   @Override
@@ -76,7 +71,7 @@ public class TickTockTcpPutPlain extends TickTockReadPlain implements IDatabase 
   }
 
   protected PrintWriter setupWriter() throws Exception {
-    Socket socket = new Socket(InetAddress.getByName(writeHost), writePort);
+    Socket socket = new Socket(InetAddress.getByName(host), Integer.parseInt(writePort));
     socket.setSoLinger(true, 10);
     PrintWriter writer = new PrintWriter(socket.getOutputStream(), false);
     threadLocalSocket.set(socket);

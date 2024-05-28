@@ -131,8 +131,9 @@ public class HttpRequest {
       post.addHeader("X-Request-ID", reqId);
       response = httpClient.execute(post);
       Header[] headers = response.getHeaders("X-Request-ID");
-      if (!reqId.equals(headers[0].getValue())
-          || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+      if (headers != null && headers.length > 0 && !reqId.equals(headers[0].getValue())
+          || response.getStatusLine().getStatusCode() != HttpStatus.SC_OK
+              && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
         throw new IOException("Bad HTTP response received");
       }
       HttpEntity entity = response.getEntity();
