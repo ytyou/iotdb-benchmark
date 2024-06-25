@@ -137,7 +137,7 @@ public class Function {
    * @param min minimum of function
    * @return
    */
-  private static double getRandomValue(double max, double min) {
+  public static double getRandomValue(double max, double min) {
     return random.nextDouble() * (max - min) + min;
   }
 }

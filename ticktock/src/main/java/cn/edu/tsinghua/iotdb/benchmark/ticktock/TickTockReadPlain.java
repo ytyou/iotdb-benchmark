@@ -20,6 +20,7 @@ package cn.edu.tsinghua.iotdb.benchmark.ticktock;
  */
 import cn.edu.tsinghua.iotdb.benchmark.conf.Config;
 import cn.edu.tsinghua.iotdb.benchmark.conf.ConfigDescriptor;
+import cn.edu.tsinghua.iotdb.benchmark.function.Function;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.Status;
 import cn.edu.tsinghua.iotdb.benchmark.schema.BaseDataSchema;
 import cn.edu.tsinghua.iotdb.benchmark.schema.DeviceSchema;
@@ -337,6 +338,9 @@ public abstract class TickTockReadPlain implements IDatabase {
         result.append(pair.getKey());
         result.append("=");
         // get value
+        // Hack: prepare a random value to add to field value. Otherwise, all devices share same
+        // same values.
+        int randomInt = (int) Function.getRandomValue(100, 1);
         String type =
             typeMap(
                 baseDataSchema.getSensorType(influxDBModel.getTags().get("device"), pair.getKey()));
@@ -345,16 +349,16 @@ public abstract class TickTockReadPlain implements IDatabase {
             result.append(((boolean) pair.getValue()) ? "true" : "false");
             break;
           case "INT32":
-            result.append((int) pair.getValue());
+            result.append((int) pair.getValue() + randomInt);
             break;
           case "INT64":
-            result.append((long) pair.getValue());
+            result.append((long) pair.getValue() + randomInt);
             break;
           case "FLOAT":
-            result.append((float) pair.getValue());
+            result.append((float) pair.getValue() + randomInt);
             break;
           case "DOUBLE":
-            result.append((double) pair.getValue());
+            result.append((double) pair.getValue() + randomInt);
             break;
           case "TEXT":
             result.append("\"").append(pair.getValue()).append("\"");
