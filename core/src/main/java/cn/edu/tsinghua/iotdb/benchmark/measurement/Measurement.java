@@ -27,7 +27,7 @@ import cn.edu.tsinghua.iotdb.benchmark.measurement.enums.TotalOperationResult;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.enums.TotalResult;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.PersistenceFactory;
 import cn.edu.tsinghua.iotdb.benchmark.measurement.persistence.TestDataPersistence;
-import com.clearspring.analytics.stream.quantile.TDigest;
+import com.tdunning.math.stats.TDigest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +60,7 @@ public class Measurement {
 
   static {
     for (Operation operation : Operation.values()) {
-      operationLatencyDigest.put(
-          operation, new TDigest(COMPRESSION, new Random(config.getDATA_SEED())));
+      operationLatencyDigest.put(operation, TDigest.createMergingDigest(COMPRESSION));
       operationLatencySumAllClient.put(operation, 0D);
     }
   }

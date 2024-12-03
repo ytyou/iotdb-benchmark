@@ -72,9 +72,9 @@
       <version>1.6.0</version>
     </dependency>
     <dependency>
-      <groupId>com.clearspring.analytics</groupId>
-      <artifactId>stream</artifactId>
-      <version>2.9.8</version>
+      <groupId>com.tdunning</groupId>
+      <artifactId>t-digest</artifactId>
+      <version>3.3</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
